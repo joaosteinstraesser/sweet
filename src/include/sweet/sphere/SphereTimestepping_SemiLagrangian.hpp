@@ -351,7 +351,7 @@ public:
 		}
 
 
-		if (timestepping_order == 2)
+		if (timestepping_order == 2 || timestepping_order == -2 || timestepping_order == -22)
 		{
 			if (trajectory_method == E_TRAJECTORY_METHOD_CANONICAL)
 			{

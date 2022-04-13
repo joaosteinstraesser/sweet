@@ -687,6 +687,14 @@ public:
 		/// Order of 2nd time stepping which might be used
 		int timestepping_order2 = -1;
 
+		// Plane coriolis not included in linear term
+		bool plane_linear_term_no_coriolis = false;
+
+		// DEBUG: do not consider influence of geostrophic modes
+		bool zero_geostrophic_modes = false;
+
+		// DEBUG: do not consider influence of gravity-wave modes
+		bool zero_gravity_modes = false;
 
 
 		void outputConfig()
@@ -708,6 +716,9 @@ public:
 			std::cout << " + semi_lagrangian_sampler_use_pole_pseudo_points: " << semi_lagrangian_sampler_use_pole_pseudo_points << std::endl;
 			std::cout << " + semi_lagrangian_convergence_threshold: " << semi_lagrangian_convergence_threshold << std::endl;
 			std::cout << " + semi_lagrangian_approximate_sphere_geometry: " << semi_lagrangian_approximate_sphere_geometry << std::endl;
+			std::cout << " + plane_term_no_coriolis: " << plane_linear_term_no_coriolis << std::endl;
+			std::cout << " + zero_geostrophic_modes: " << zero_geostrophic_modes << std::endl;
+			std::cout << " + zero_gravity_modes: " << zero_gravity_modes << std::endl;
 			std::cout << " + plane_dealiasing (compile time): " <<
 #if SWEET_USE_PLANE_SPECTRAL_DEALIASING
 			1
@@ -754,6 +765,9 @@ public:
 			std::cout << "	--semi-lagrangian-interpolation-limiter [bool]	Use limiter for cubic interpolation" << std::endl;
 			std::cout << "	--semi-lagrangian-convergence-threshold [float]	Threshold to stop iterating, Use -1 to disable" << std::endl;
 			std::cout << "	--semi-lagrangian-approximate-sphere-geometry [int]	0: no approximation, 1: Richies approximation, default: 0" << std::endl;
+			std::cout << "	--plane-linear-term-no-coriolis [0;1]	0: coriolis inclued in linear term, 1: not included, default: 0" << std::endl;
+			std::cout << "	--zero-geostrophic-modes [0;1]	0: consider geostrophic modes, 1: ignore influence of geostrophic modes, default: 0" << std::endl;
+			std::cout << "	--zero-gravity-modes [0;1]	0: consider gravity-waves modes, 1: ignore influence of gravity-waves modes, default: 0" << std::endl;
 
 		}
 
@@ -800,6 +814,15 @@ public:
 	        next_free_program_option++;
 
 	        long_options[next_free_program_option] = {"space-grid-use-c-staggering", required_argument, 0, 256+next_free_program_option};
+	        next_free_program_option++;
+
+	        long_options[next_free_program_option] = {"plane-linear-term-no-coriolis", required_argument, 0, 256+next_free_program_option};
+	        next_free_program_option++;
+
+	        long_options[next_free_program_option] = {"zero-geostrophic-modes", required_argument, 0, 256+next_free_program_option};
+	        next_free_program_option++;
+
+	        long_options[next_free_program_option] = {"zero-gravity-modes", required_argument, 0, 256+next_free_program_option};
 	        next_free_program_option++;
 		}
 
@@ -866,9 +889,21 @@ public:
 			case 11:
 				space_grid_use_c_staggering = atof(i_value);
 				return -1;
+
+			case 12:
+				plane_linear_term_no_coriolis = atoi(i_value);
+				return -1;
+
+			case 13:
+				zero_geostrophic_modes = atof(i_value);
+				return -1;
+
+			case 14:
+				zero_gravity_modes = atof(i_value);
+				return -1;
 			}
 
-			return 12;
+			return 15;
 		}
 	} disc;
 

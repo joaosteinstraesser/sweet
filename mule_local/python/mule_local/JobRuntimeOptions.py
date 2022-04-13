@@ -132,6 +132,12 @@ class JobRuntimeOptions(InfoError):
         self.reuse_plans = -1
         self.comma_separated_tags = None
 
+        self.plane_linear_term_no_coriolis = None;
+
+        self.zero_geostrophic_modes = None;
+        self.zero_gravity_modes = None;
+
+
         #
         # User defined parameters
         # Each new entry must set three values:
@@ -146,6 +152,7 @@ class JobRuntimeOptions(InfoError):
         self.user_defined_parameters = {}
 
         self.init_phase = False
+
 
 
     def __setattr__(self, name, value):
@@ -407,6 +414,18 @@ class JobRuntimeOptions(InfoError):
             if self.comma_separated_tags != None:
                 idstr += '_tags'+str(self.comma_separated_tags)
 
+        if not 'runtime.plane_linear_term_no_coriolis' in filter_list:
+            if self.plane_linear_term_no_coriolis != None:
+                idstr += '_linearnocoriolis'+str(self.plane_linear_term_no_coriolis)
+
+        if not 'runtime.zero_geostrophic_modes' in filter_list:
+            if self.zero_geostrophic_modes != None:
+                idstr += '_zerogeostrophicmodes'+str(self.zero_geostrophic_modes)
+
+        if not 'runtime.zero_gravity_modes' in filter_list:
+            if self.zero_gravity_modes != None:
+                idstr += '_zerogravitymodes'+str(self.zero_gravity_modes)
+
         if idstr != '':
             idstr = "RT"+idstr
 
@@ -613,6 +632,14 @@ class JobRuntimeOptions(InfoError):
         if self.comma_separated_tags != None:
             retval += ' --comma-separated-tags='+str(self.comma_separated_tags)
 
+        if self.plane_linear_term_no_coriolis != None:
+            retval += ' --plane-linear-term-no-coriolis='+str(self.plane_linear_term_no_coriolis)
+
+        if self.zero_geostrophic_modes != None:
+            retval += ' --zero-geostrophic-modes='+str(self.zero_geostrophic_modes)
+
+        if self.zero_gravity_modes != None:
+            retval += ' --zero-gravity-modes='+str(self.zero_gravity_modes)
 
         for key, param in self.user_defined_parameters.items():
             retval += ' '+param['option']+str(param['value'])

@@ -83,7 +83,63 @@ void SWE_Sphere_TS_l_exp_n_etdrk::run_timestep(
 		io_div = phi0_Un_div + i_fixed_dt*phi1_FUn_div;
 		return;
 	}
+	else if (timestepping_order == -2)
+	{
 
+		// Compute phi0 U_n
+		SphereData_Spectral phi0_Un_phi(sphereDataConfig), phi0_Un_vrt(sphereDataConfig), phi0_Un_div(sphereDataConfig);
+		ts_phi0_rexi.run_timestep(
+				io_phi, io_vrt, io_div,
+				phi0_Un_phi, phi0_Un_vrt, phi0_Un_div,
+				i_fixed_dt,
+				i_simulation_timestamp
+			);
+
+		// Compute F(U_n)
+		SphereData_Spectral FUn_phi(sphereDataConfig), FUn_vrt(sphereDataConfig), FUn_div(sphereDataConfig);
+		ts_l_erk_n_erk.euler_timestep_update_nonlinear(
+				io_phi, io_vrt, io_div,
+				FUn_phi, FUn_vrt, FUn_div,
+				i_simulation_timestamp
+			);
+
+                // Compute phi1 F(U_n)
+		SphereData_Spectral phi1_FUn_phi(sphereDataConfig), phi1_FUn_vrt(sphereDataConfig), phi1_FUn_div(sphereDataConfig);
+		ts_phi1_rexi.run_timestep(
+				FUn_phi, FUn_vrt, FUn_div,
+				phi1_FUn_phi, phi1_FUn_vrt, phi1_FUn_div,
+				i_fixed_dt,
+				i_simulation_timestamp
+			);
+
+                // Compute U1 = U_{ETD1}
+		SphereData_Spectral A_phi = phi0_Un_phi + i_fixed_dt*phi1_FUn_phi;
+		SphereData_Spectral A_vrt = phi0_Un_vrt + i_fixed_dt*phi1_FUn_vrt;
+		SphereData_Spectral A_div = phi0_Un_div + i_fixed_dt*phi1_FUn_div;
+
+		// Compute F(A)
+		SphereData_Spectral FAn_phi(sphereDataConfig), FAn_vrt(sphereDataConfig), FAn_div(sphereDataConfig);
+		ts_l_erk_n_erk.euler_timestep_update_nonlinear(
+				A_phi, A_vrt, A_div,
+				FAn_phi, FAn_vrt, FAn_div,
+				i_simulation_timestamp
+			);
+
+		// Compute phi1 .5 * (F(U_n) + F(A))
+		SphereData_Spectral phi1_FU2n_phi(sphereDataConfig), phi1_FU2n_vrt(sphereDataConfig), phi1_FU2n_div(sphereDataConfig);
+		ts_phi1_rexi.run_timestep(
+				.5 * (FUn_phi + FAn_phi), .5 * (FUn_vrt + FAn_vrt), .5 * (FUn_div + FAn_div),
+				phi1_FU2n_phi, phi1_FU2n_vrt, phi1_FU2n_div,
+				i_fixed_dt,
+				i_simulation_timestamp
+			);
+
+		// Compute final result
+		io_phi = phi0_Un_phi + i_fixed_dt*phi1_FU2n_phi;
+		io_vrt = phi0_Un_vrt + i_fixed_dt*phi1_FU2n_vrt;
+		io_div = phi0_Un_div + i_fixed_dt*phi1_FU2n_div;
+
+	}
 	if (timestepping_order == 2)
 	{
 		/*
@@ -354,7 +410,7 @@ void SWE_Sphere_TS_l_exp_n_etdrk::setup(
 
 	ts_l_erk_n_erk.setup(timestepping_order, timestepping_order2);
 
-	if (timestepping_order == 1)
+	if (timestepping_order == 1 || timestepping_order == -2)
 	{
 		ts_phi0_rexi.setup(i_rexiSimVars, "phi0", i_timestep_size, false, false);
 		ts_phi1_rexi.setup(i_rexiSimVars, "phi1", i_timestep_size, false, false);

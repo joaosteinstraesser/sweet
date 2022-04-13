@@ -215,7 +215,7 @@ void SWE_Plane_TS_l_direct::run_timestep_agrid_planedata(
 			
 
 
-                        if (compute_phin)
+			if (compute_phin)
 			{
 
 				if (simVars.misc.verbosity > 5 && ik1 == 0 && ik0 == 0)
@@ -231,7 +231,7 @@ void SWE_Plane_TS_l_direct::run_timestep_agrid_planedata(
 				 */
 				complex lambda[3];
 
-				if (simVars.sim.plane_rotating_f0 == 0)
+				if (simVars.sim.plane_rotating_f0 == 0 || simVars.disc.plane_linear_term_no_coriolis)
 				{
 					/*
 					 * http://www.wolframalpha.com/input/?i=eigenvector%7B%7B0,h*b,h*c%7D,%7Bg*b,0,0%7D,%7Bg*c,0,0%7D%7D
@@ -441,6 +441,12 @@ void SWE_Plane_TS_l_direct::run_timestep_agrid_planedata(
 					std::complex<T> &lam = lambda[i];
 
 					std::complex<T> K = rexiFunctions.eval(lam*dt);
+
+					if (i == 0 && simVars.disc.zero_geostrophic_modes)
+						K = 0.;
+					if (i > 0 && simVars.disc.zero_gravity_modes)
+						K = 0.;
+
 					for (int j = 0; j < 3; j++)
 						v_lambda[j][i] = v[j][i] * K;
 				}
