@@ -62,7 +62,7 @@ void SWE_Plane_TS_l_rexi_na_sl_nd_etdrk::euler_timestep_update_nonlinear(
 
 	}
 
-	if (simVars.disc.plane_linear_term_no_coriolis)
+	if ( simVars.disc.coriolis_treatment == "nonlinear" )
 	{
 		o_u_t += simVars.sim.plane_rotating_f0 * i_v;
 		o_v_t -= simVars.sim.plane_rotating_f0 * i_u;

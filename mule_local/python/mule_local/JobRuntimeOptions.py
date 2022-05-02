@@ -132,7 +132,9 @@ class JobRuntimeOptions(InfoError):
         self.reuse_plans = -1
         self.comma_separated_tags = None
 
-        self.plane_linear_term_no_coriolis = None;
+        ##self.plane_linear_term_no_coriolis = None;
+        ##self.advection_coriolis = None;
+        self.coriolis_treatment = None;
 
         self.zero_geostrophic_modes = None;
         self.zero_gravity_modes = None;
@@ -414,9 +416,17 @@ class JobRuntimeOptions(InfoError):
             if self.comma_separated_tags != None:
                 idstr += '_tags'+str(self.comma_separated_tags)
 
-        if not 'runtime.plane_linear_term_no_coriolis' in filter_list:
-            if self.plane_linear_term_no_coriolis != None:
-                idstr += '_linearnocoriolis'+str(self.plane_linear_term_no_coriolis)
+        if not 'runtime.coriolis+treatment' in filter_list:
+            if self.coriolis_treatment != None:
+                idstr += '_coriolistreatment'+str(self.coriolis_treatment)
+
+        #####if not 'runtime.plane_linear_term_no_coriolis' in filter_list:
+        #####    if self.plane_linear_term_no_coriolis != None:
+        #####        idstr += '_linearnocoriolis'+str(self.plane_linear_term_no_coriolis)
+
+        #####if not 'runtime.advection_coriolis' in filter_list:
+        #####    if self.advection_coriolis != None:
+        #####        idstr += '_advectioncoriolis'+str(self.advection_coriolis)
 
         if not 'runtime.zero_geostrophic_modes' in filter_list:
             if self.zero_geostrophic_modes != None:
@@ -632,8 +642,14 @@ class JobRuntimeOptions(InfoError):
         if self.comma_separated_tags != None:
             retval += ' --comma-separated-tags='+str(self.comma_separated_tags)
 
-        if self.plane_linear_term_no_coriolis != None:
-            retval += ' --plane-linear-term-no-coriolis='+str(self.plane_linear_term_no_coriolis)
+        if self.coriolis_treatment != None:
+            retval += ' --coriolis-treatment='+str(self.coriolis_treatment)
+
+        ###if self.plane_linear_term_no_coriolis != None:
+        ###    retval += ' --plane-linear-term-no-coriolis='+str(self.plane_linear_term_no_coriolis)
+
+        ###if self.advection_coriolis != None:
+        ###    retval += ' --advection-coriolis='+str(self.advection_coriolis)
 
         if self.zero_geostrophic_modes != None:
             retval += ' --zero-geostrophic-modes='+str(self.zero_geostrophic_modes)

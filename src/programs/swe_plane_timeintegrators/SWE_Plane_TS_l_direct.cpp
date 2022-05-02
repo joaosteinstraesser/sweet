@@ -231,7 +231,7 @@ void SWE_Plane_TS_l_direct::run_timestep_agrid_planedata(
 				 */
 				complex lambda[3];
 
-				if (simVars.sim.plane_rotating_f0 == 0 || simVars.disc.plane_linear_term_no_coriolis)
+				if (simVars.sim.plane_rotating_f0 == 0 ||  ! (simVars.disc.coriolis_treatment == "linear" ))
 				{
 					/*
 					 * http://www.wolframalpha.com/input/?i=eigenvector%7B%7B0,h*b,h*c%7D,%7Bg*b,0,0%7D,%7Bg*c,0,0%7D%7D

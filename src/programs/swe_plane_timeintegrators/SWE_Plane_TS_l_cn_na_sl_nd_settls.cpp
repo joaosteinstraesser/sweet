@@ -81,8 +81,12 @@ void SWE_Plane_TS_l_cn_na_sl_nd_settls::run_timestep(
 	double alpha = 2.0/dt;
 	double kappa = alpha*alpha;
 	double kappa_bar = kappa;
-	kappa += f0*f0;
-	kappa_bar -= f0*f0;
+
+	if (simVars.disc.coriolis_treatment == "linear"  || simVars.disc.coriolis_treatment == "advection")
+	{
+		kappa += f0*f0;
+		kappa_bar -= f0*f0;
+	}
 
 	Staggering staggering;
 	assert(staggering.staggering_type == 'a');
@@ -121,9 +125,34 @@ void SWE_Plane_TS_l_cn_na_sl_nd_settls::run_timestep(
 	 * 
 	 *    = 1/2 * dt (2.0/dt U + L U + 2.0 * N(U))
 	 */
-	PlaneData_Spectral rhs_u = alpha * io_u + f0 * io_v    - g * op.diff_c_x(io_h);
-	PlaneData_Spectral rhs_v =  - f0 * io_u + alpha * io_v - g * op.diff_c_y(io_h);
-	PlaneData_Spectral rhs_h = alpha * io_h - h_bar * div;
+	///PlaneData_Spectral rhs_u = alpha * io_u + f0 * io_v    - g * op.diff_c_x(io_h);
+	///PlaneData_Spectral rhs_v =  - f0 * io_u + alpha * io_v - g * op.diff_c_y(io_h);
+	///PlaneData_Spectral rhs_h = alpha * io_h - h_bar * div;
+
+	PlaneData_Spectral rhs_u(io_h.planeDataConfig);
+	PlaneData_Spectral rhs_v(io_h.planeDataConfig);
+	PlaneData_Spectral rhs_h(io_h.planeDataConfig);
+
+	if ( simVars.disc.coriolis_treatment == "linear" )
+	{
+		rhs_u = alpha * io_u + f0 * io_v    - g * op.diff_c_x(io_h);
+		rhs_v =  - f0 * io_u + alpha * io_v - g * op.diff_c_y(io_h);
+		rhs_h = alpha * io_h - h_bar * div;
+	}
+	else if (  simVars.disc.coriolis_treatment == "nonlinear" )
+	{
+		rhs_u = alpha * io_u + g * op.diff_c_x(io_h);
+		rhs_v = alpha * io_v + g * op.diff_c_y(io_h);
+		rhs_h = alpha * io_h + h_bar * div;
+	}
+	else if (  simVars.disc.coriolis_treatment == "advection" )
+	{
+		rhs_u = alpha * (io_u + f0 * io_v / alpha)    - g * op.diff_c_x(io_h);
+		rhs_v = alpha * (io_v - f0 * io_u / alpha)  - g * op.diff_c_y(io_h);
+		rhs_h = alpha * io_h - h_bar * div;
+	}
+	else
+		SWEETError("Wrong type of Coriolis treatment.");
 
 	// All the RHS are to be evaluated at the departure points
 	PlaneData_Physical rhs_u_phys = rhs_u.toPhys();
@@ -154,7 +183,36 @@ void SWE_Plane_TS_l_cn_na_sl_nd_settls::run_timestep(
 		nonlin = 0.5*(io_h*div) + 0.5*sampler2D.bicubic_scalar(hdiv_phys, posx_d, posy_d, -0.5, -0.5);
 
 		// Add to RHS h (TODO (2020-03-16): No clue why there's a -2.0)
-		rhs_h = rhs_h - 2.0*nonlin;
+
+
+		if ( simVars.disc.coriolis_treatment == "nonlinear" )
+		{
+			rhs_h = rhs_h - 2.0*nonlin;
+		}
+		else
+		{
+			rhs_h = rhs_h + 2.0*nonlin;  // -2 * (- h * div)
+		}
+
+		// Coriolis term treated in the nonlinearity
+		if ( simVars.disc.coriolis_treatment == "nonlinear" )
+		{
+			PlaneData_Spectral nonlin_u(io_u.planeDataConfig);
+			PlaneData_Spectral nonlin_v(io_v.planeDataConfig);
+
+			PlaneData_Spectral fu = 2. * f0 * io_u - f0 * u_prev;
+			PlaneData_Spectral fv = 2. * f0 * io_v - f0 * v_prev;
+
+			PlaneData_Physical fu_phys = fu.toPhys();
+			PlaneData_Physical fv_phys = fv.toPhys();
+			nonlin_u = 0.5*(f0 * io_u) + 0.5*sampler2D.bicubic_scalar(fu_phys, posx_d, posy_d, -0.5, -0.5);
+			nonlin_v = 0.5*(f0 * io_v) + 0.5*sampler2D.bicubic_scalar(fv_phys, posx_d, posy_d, -0.5, -0.5);
+
+			rhs_u = rhs_u - 2.0 * nonlin_v;  // -2. * (fv)
+			rhs_v = rhs_v + 2.0 * nonlin_u;  // -2. * (-fu)
+		}
+
+
 
 	}
 
@@ -162,28 +220,58 @@ void SWE_Plane_TS_l_cn_na_sl_nd_settls::run_timestep(
 	// Build Helmholtz eq.
 	PlaneData_Spectral rhs_div = op.diff_c_x(rhs_u)+op.diff_c_y(rhs_v);
 	PlaneData_Spectral rhs_vort = op.diff_c_x(rhs_v)-op.diff_c_y(rhs_u);
-	PlaneData_Spectral rhs     = kappa* rhs_h / alpha - h_bar * rhs_div - f0 * h_bar * rhs_vort / alpha;
+	//PlaneData_Spectral rhs     = kappa* rhs_h / alpha - h_bar * rhs_div - f0 * h_bar * rhs_vort / alpha;
+	PlaneData_Spectral rhs(io_h.planeDataConfig);
+	if (simVars.disc.coriolis_treatment == "linear" || simVars.disc.coriolis_treatment == "advection")
+	{
+		rhs     = kappa* rhs_h / alpha - h_bar * rhs_div - f0 * h_bar * rhs_vort / alpha;
+	}
+	else if (simVars.disc.coriolis_treatment == "nonlinear")
+	{
+		rhs     = kappa* rhs_h / alpha + h_bar * rhs_div;
+	}
 
 	// Helmholtz solver
 	helmholtz_spectral_solver(kappa, g*h_bar, rhs, h);
 
 	// Update u and v
-	u = (1/kappa)*
-			( alpha *rhs_u + f0 * rhs_v
-					- g * alpha * op.diff_c_x(h)
-					- g * f0 * op.diff_c_y(h))
-					;
+	if (simVars.disc.coriolis_treatment == "linear" || simVars.disc.coriolis_treatment == "advection")
+	{
+		u = (1/kappa)*
+				( alpha *rhs_u + f0 * rhs_v
+						- g * alpha * op.diff_c_x(h)
+						- g * f0 * op.diff_c_y(h))
+						;
 
-	v = (1/kappa)*
-			( alpha *rhs_v - f0 * rhs_u
-					+ g * f0 * op.diff_c_x(h)
-					- g * alpha * op.diff_c_y(h))
-					;
+		v = (1/kappa)*
+				( alpha *rhs_v - f0 * rhs_u
+						+ g * f0 * op.diff_c_x(h)
+						- g * alpha * op.diff_c_y(h))
+						;
+	}
+	else if (simVars.disc.coriolis_treatment == "nonlinear")
+	{
+		u = (1/kappa)*
+				( alpha *rhs_u
+						+ g * alpha * op.diff_c_x(h))
+						;
+
+		v = (1/kappa)*
+				( alpha *rhs_v
+						+ g * alpha * op.diff_c_y(h))
+						;
+	}
 
 	// Set time (n) as time (n-1)
 	h_prev = io_h;
 	u_prev = io_u;
 	v_prev = io_v;
+
+	if ( simVars.disc.coriolis_treatment == "advection" )
+	{
+		u -= f0 * io_v;
+		v += f0 * io_u;
+	}
 
 	// output data
 	io_h = h;
