@@ -129,8 +129,8 @@ void SWE_Plane_TS_l_cn_na_sl_nd_settls::run_timestep(
 		PlaneData_Physical posx_a_phys = Convert_ScalarDataArray_to_PlaneDataPhysical::convert(posx_a, io_h.planeDataConfig);
 		PlaneData_Physical posy_a_phys = Convert_ScalarDataArray_to_PlaneDataPhysical::convert(posy_a, io_h.planeDataConfig);
 
-		PlaneData_Physical fposx_a_phys = simVars.sim.plane_rotating_f0 * posx_a_phys;
-		PlaneData_Physical fposy_a_phys = -simVars.sim.plane_rotating_f0 * posy_a_phys;
+		PlaneData_Physical fposx_a_phys =  f0 * posx_a_phys;
+		PlaneData_Physical fposy_a_phys = -f0 * posy_a_phys;
 
 		fposx_a.loadPlaneDataPhysical(fposx_a_phys);
 		fposy_a.loadPlaneDataPhysical(fposy_a_phys);
@@ -139,8 +139,8 @@ void SWE_Plane_TS_l_cn_na_sl_nd_settls::run_timestep(
 		PlaneData_Physical posx_d_phys = Convert_ScalarDataArray_to_PlaneDataPhysical::convert(posx_d, io_h.planeDataConfig);
 		PlaneData_Physical posy_d_phys = Convert_ScalarDataArray_to_PlaneDataPhysical::convert(posy_d, io_h.planeDataConfig);
 
-		PlaneData_Physical fposx_d_phys = simVars.sim.plane_rotating_f0 * posx_d_phys;
-		PlaneData_Physical fposy_d_phys = -simVars.sim.plane_rotating_f0 * posy_d_phys;
+		PlaneData_Physical fposx_d_phys =  f0 * posx_d_phys;
+		PlaneData_Physical fposy_d_phys = -f0 * posy_d_phys;
 
 		fposx_d.loadPlaneDataPhysical(fposx_d_phys);
 		fposy_d.loadPlaneDataPhysical(fposy_d_phys);
@@ -236,14 +236,7 @@ void SWE_Plane_TS_l_cn_na_sl_nd_settls::run_timestep(
 		// Add to RHS h (TODO (2020-03-16): No clue why there's a -2.0)
 
 
-		if ( simVars.disc.coriolis_treatment == "nonlinear" )
-		{
-			rhs_h = rhs_h - 2.0*nonlin;
-		}
-		else
-		{
-			rhs_h = rhs_h - 2.0*nonlin;
-		}
+		rhs_h = rhs_h - 2.0*nonlin;
 
 		// Coriolis term treated in the nonlinearity
 		if ( simVars.disc.coriolis_treatment == "nonlinear" )
@@ -259,8 +252,8 @@ void SWE_Plane_TS_l_cn_na_sl_nd_settls::run_timestep(
 			nonlin_u = 0.5*(f0 * io_u) + 0.5*sampler2D.bicubic_scalar(fu_phys, posx_d, posy_d, -0.5, -0.5);
 			nonlin_v = 0.5*(f0 * io_v) + 0.5*sampler2D.bicubic_scalar(fv_phys, posx_d, posy_d, -0.5, -0.5);
 
-			rhs_u = rhs_u - 2.0 * nonlin_v;  // -2. * (fv)
-			rhs_v = rhs_v + 2.0 * nonlin_u;  // -2. * (-fu)
+			rhs_u = rhs_u + 2.0 * nonlin_v;
+			rhs_v = rhs_v - 2.0 * nonlin_u;
 		}
 
 
@@ -320,8 +313,8 @@ void SWE_Plane_TS_l_cn_na_sl_nd_settls::run_timestep(
 
 	if ( simVars.disc.coriolis_treatment == "advection" )
 	{
-		u = u - fposy_a;
-		v = v - fposx_a;
+		u = u - fposy_d;
+		v = v - fposx_d;
 	}
 
 	// output data
