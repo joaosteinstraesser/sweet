@@ -136,6 +136,8 @@ void SWE_Plane_TS_l_rexi_na_sl_nd_etdrk::run_timestep(
 
 
 
+
+
 	// Calculate departure points - always force to be second order accurate!
 	semiLagrangian.semi_lag_departure_points_settls(
 			u_prev.toPhys(),	v_prev.toPhys(),
@@ -150,6 +152,43 @@ void SWE_Plane_TS_l_rexi_na_sl_nd_etdrk::run_timestep(
 			simVars.disc.semi_lagrangian_max_iterations,
 			simVars.disc.semi_lagrangian_convergence_threshold
 	);
+
+	////////////////////////////////////
+	// Coriolis in advection: f * pos //
+	////////////////////////////////////
+	// Position x and y
+	PlaneData_Spectral fposx_a(planeDataConfig);
+	PlaneData_Spectral fposy_a(planeDataConfig);
+	PlaneData_Spectral fposx_d(planeDataConfig);
+	PlaneData_Spectral fposy_d(planeDataConfig);
+	fposx_a.spectral_set_zero();
+	fposy_a.spectral_set_zero();
+	fposx_d.spectral_set_zero();
+	fposy_d.spectral_set_zero();
+	if ( simVars.disc.coriolis_treatment == "advection" )
+	{
+		// The term added (and after subtracted) to (u,v) = f * k x r = (-fy, fx)
+		PlaneData_Physical posx_a_phys = Convert_ScalarDataArray_to_PlaneDataPhysical::convert(posx_a, planeDataConfig);
+		PlaneData_Physical posy_a_phys = Convert_ScalarDataArray_to_PlaneDataPhysical::convert(posy_a, planeDataConfig);
+
+		PlaneData_Physical fposx_a_phys = simVars.sim.plane_rotating_f0 * posx_a_phys;
+		PlaneData_Physical fposy_a_phys = -simVars.sim.plane_rotating_f0 * posy_a_phys;
+
+		fposx_a.loadPlaneDataPhysical(fposx_a_phys);
+		fposy_a.loadPlaneDataPhysical(fposy_a_phys);
+
+		// The term added (and after subtracted) to (u,v) = f * k x r = (-fy, fx)
+		PlaneData_Physical posx_d_phys = Convert_ScalarDataArray_to_PlaneDataPhysical::convert(posx_d, planeDataConfig);
+		PlaneData_Physical posy_d_phys = Convert_ScalarDataArray_to_PlaneDataPhysical::convert(posy_d, planeDataConfig);
+
+		PlaneData_Physical fposx_d_phys = simVars.sim.plane_rotating_f0 * posx_d_phys;
+		PlaneData_Physical fposy_d_phys = -simVars.sim.plane_rotating_f0 * posy_d_phys;
+
+		fposx_d.loadPlaneDataPhysical(fposx_d_phys);
+		fposy_d.loadPlaneDataPhysical(fposy_d_phys);
+
+	}
+
 
 	if (timestepping_order == 1 || timestepping_order == 2 || timestepping_order == -2 || timestepping_order == -22)
 	{
@@ -199,6 +238,41 @@ void SWE_Plane_TS_l_rexi_na_sl_nd_etdrk::run_timestep(
 		u = sampler2D.bicubic_scalar(u, posx_d, posy_d, -0.5, -0.5);
 		v = sampler2D.bicubic_scalar(v, posx_d, posy_d, -0.5, -0.5);
 
+
+		// Add coriolis term to (u,v)
+		// IT is known analytically, therefore no need of interpolation // 20197-ifs-documentation-cy47r3-part-iii-dynamics-and-numerical-procedures.pdf
+		// Store it in u_with_coriolis, interpolate it and apply phi
+		// and let (u,v) as usual to compute nonlinear term in higher orders
+		PlaneData_Spectral tmp_u = u;
+		if ( simVars.disc.coriolis_treatment == "advection" )
+		{
+			std::cout << "CCC" << std::endl;
+			u = u + fposy_d;
+			v = v + fposx_d;
+
+			///u.loadPlaneDataPhysical(u.toPhys() + fposy_d.toPhys());
+			///v.loadPlaneDataPhysical(v.toPhys() + fposx_d.toPhys());
+
+
+			//////////u_with_coriolis = u + fposy;
+			//////////v_with_coriolis = v + fposx;
+
+			//////////u_with_coriolis = sampler2D.bicubic_scalar(u_with_coriolis, posx_d, posy_d, -0.5, -0.5);
+			//////////v_with_coriolis = sampler2D.bicubic_scalar(v_with_coriolis, posx_d, posy_d, -0.5, -0.5);
+
+			//////////PlaneData_Spectral h_dummy = h;
+
+			////////////Calculate phi_0 of interpolated U
+			//////////ts_phi0_rexi.run_timestep(
+			//////////		h, u_with_coriolis, v_with_coriolis,
+			//////////		h_dummy, u_with_coriolis, v_with_coriolis,
+			//////////		i_dt,
+			//////////		i_simulation_timestamp
+			//////////);
+
+		}
+
+
 		//Calculate phi_0 of interpolated U
 		PlaneData_Spectral phi0_Un_h(planeDataConfig);
 		PlaneData_Spectral phi0_Un_u(planeDataConfig);
@@ -215,6 +289,17 @@ void SWE_Plane_TS_l_rexi_na_sl_nd_etdrk::run_timestep(
 		v = phi0_Un_v;
 
 
+
+
+		if ( simVars.disc.coriolis_treatment == "advection" )
+		{
+			std::cout << "DDD" << std::endl;
+			u = u - fposy_d;
+			v = v - fposx_d;
+			///u.loadPlaneDataPhysical(u.toPhys() - fposy_a.toPhys());
+			///v.loadPlaneDataPhysical(v.toPhys() - fposx_a.toPhys());
+		}
+		std::cout << "AAAA " << (tmp_u - u).toPhys().physical_reduce_max_abs() << std::endl;
 	}
 	////else
 	////{
