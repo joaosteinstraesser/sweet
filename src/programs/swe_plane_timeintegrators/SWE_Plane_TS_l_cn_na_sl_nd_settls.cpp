@@ -119,10 +119,6 @@ void SWE_Plane_TS_l_cn_na_sl_nd_settls::run_timestep(
 	fposy_a.spectral_set_zero();
 	fposx_d.spectral_set_zero();
 	fposy_d.spectral_set_zero();
-	PlaneData_Spectral u_with_coriolis(io_h.planeDataConfig);
-	PlaneData_Spectral v_with_coriolis(io_h.planeDataConfig);
-	PlaneData_Spectral u_with_coriolis_new(io_h.planeDataConfig);
-	PlaneData_Spectral v_with_coriolis_new(io_h.planeDataConfig);
 	if ( simVars.disc.coriolis_treatment == "advection" )
 	{
 		// The term added (and after subtracted) to (u,v) = f * k x r = (-fy, fx)
@@ -212,7 +208,6 @@ void SWE_Plane_TS_l_cn_na_sl_nd_settls::run_timestep(
 		rhs_v = rhs_v + alpha * fposx_d;
 	}
 
-
 	// Calculate nonlinear term at half timestep and add to RHS of h eq.
 
 	if (!use_only_linear_divergence) //full nonlinear case
@@ -234,8 +229,6 @@ void SWE_Plane_TS_l_cn_na_sl_nd_settls::run_timestep(
 		nonlin = 0.5*(io_h*div) + 0.5*sampler2D.bicubic_scalar(hdiv_phys, posx_d, posy_d, -0.5, -0.5);
 
 		// Add to RHS h (TODO (2020-03-16): No clue why there's a -2.0)
-
-
 		rhs_h = rhs_h - 2.0*nonlin;
 
 		// Coriolis term treated in the nonlinearity
@@ -313,8 +306,8 @@ void SWE_Plane_TS_l_cn_na_sl_nd_settls::run_timestep(
 
 	if ( simVars.disc.coriolis_treatment == "advection" )
 	{
-		u = u - fposy_d;
-		v = v - fposx_d;
+		u = u - fposy_a;
+		v = v - fposx_a;
 	}
 
 	// output data

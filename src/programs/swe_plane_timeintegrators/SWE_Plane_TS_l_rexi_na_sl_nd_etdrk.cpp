@@ -157,10 +157,13 @@ void SWE_Plane_TS_l_rexi_na_sl_nd_etdrk::run_timestep(
 	// Coriolis in advection: f * pos //
 	////////////////////////////////////
 	// Position x and y
+	PlaneData_Spectral dummy(planeDataConfig);
 	PlaneData_Spectral fposx_a(planeDataConfig);
 	PlaneData_Spectral fposy_a(planeDataConfig);
 	PlaneData_Spectral fposx_d(planeDataConfig);
 	PlaneData_Spectral fposy_d(planeDataConfig);
+	PlaneData_Spectral fposx_d_phi0(planeDataConfig);
+	PlaneData_Spectral fposy_d_phi0(planeDataConfig);
 	fposx_a.spectral_set_zero();
 	fposy_a.spectral_set_zero();
 	fposx_d.spectral_set_zero();
@@ -186,6 +189,14 @@ void SWE_Plane_TS_l_rexi_na_sl_nd_etdrk::run_timestep(
 
 		fposx_d.loadPlaneDataPhysical(fposx_d_phys);
 		fposy_d.loadPlaneDataPhysical(fposy_d_phys);
+
+		ts_phi0_rexi.run_timestep(
+				h * 0., fposx_d, fposy_d,
+				dummy, fposx_d_phi0, fposy_d_phi0,
+				i_dt,
+				i_simulation_timestamp
+		);
+
 
 	}
 
@@ -246,9 +257,8 @@ void SWE_Plane_TS_l_rexi_na_sl_nd_etdrk::run_timestep(
 		PlaneData_Spectral tmp_u = u;
 		if ( simVars.disc.coriolis_treatment == "advection" )
 		{
-			std::cout << "CCC" << std::endl;
-			u = u + fposy_d;
-			v = v + fposx_d;
+			///u = u + fposy_d;
+			///v = v + fposx_d;
 
 			///u.loadPlaneDataPhysical(u.toPhys() + fposy_d.toPhys());
 			///v.loadPlaneDataPhysical(v.toPhys() + fposx_d.toPhys());
@@ -291,15 +301,6 @@ void SWE_Plane_TS_l_rexi_na_sl_nd_etdrk::run_timestep(
 
 
 
-		if ( simVars.disc.coriolis_treatment == "advection" )
-		{
-			std::cout << "DDD" << std::endl;
-			u = u - fposy_d;
-			v = v - fposx_d;
-			///u.loadPlaneDataPhysical(u.toPhys() - fposy_a.toPhys());
-			///v.loadPlaneDataPhysical(v.toPhys() - fposx_a.toPhys());
-		}
-		std::cout << "AAAA " << (tmp_u - u).toPhys().physical_reduce_max_abs() << std::endl;
 	}
 	////else
 	////{
@@ -671,6 +672,16 @@ void SWE_Plane_TS_l_rexi_na_sl_nd_etdrk::run_timestep(
 
 	}
 
+	if ( simVars.disc.coriolis_treatment == "advection" )
+	{
+		std::cout << " posy_d_phi0 " << fposy_d_phi0.toPhys().physical_reduce_max_abs() << std::endl;
+		std::cout << " posy_d " << fposy_d.toPhys().physical_reduce_max_abs() << std::endl;
+		std::cout << " posy_a " << fposy_a.toPhys().physical_reduce_max_abs() << std::endl;
+		std::cout << " posy_d-posy_a " << (fposy_d - fposy_a).toPhys().physical_reduce_max_abs() << std::endl;
+		std::cout << " posy_d_phi0-posy_a " << (fposy_d_phi0 - fposy_a).toPhys().physical_reduce_max_abs() << std::endl;
+		u = u + fposy_d_phi0 - fposy_a;
+		v = v + fposx_d_phi0 - fposx_a;
+	}
 
 
 	// Save current time step for next step

@@ -219,9 +219,10 @@ public:
 					int count_igpos=0;
 					int count_igneg=0;
 					int count_geo=0;
+					double eps2 = 1e-5;
 					for(int i=0; i<3; i++)
 					{
-						if(eval[i].imag() > 0.5 * i_simVars.sim.plane_rotating_f0)
+						if(eval[i].imag() > 0.5 * i_simVars.sim.plane_rotating_f0 * eps2)
 						{
 							//std::cout<< "IG pos mode: " << eval[i].imag() << std::endl;
 							//file_igpos << eval[i].imag();
@@ -229,7 +230,7 @@ public:
 							file_igpos << "\t";
 							count_igpos++;
 						}
-						if(eval[i].imag() < - 0.5 * i_simVars.sim.plane_rotating_f0)
+						if(eval[i].imag() < - 0.5 * i_simVars.sim.plane_rotating_f0 * eps2)
 						{
 							//std::cout<< "IG neg mode: " << eval[i].imag() << std::endl;
 							//file_igneg << eval[i].imag();
@@ -237,7 +238,7 @@ public:
 							file_igneg << "\t";
 							count_igneg++;
 						}
-						if(eval[i].imag() >= - 0.5 * i_simVars.sim.plane_rotating_f0 && eval[i].imag() <=  0.5 * i_simVars.sim.plane_rotating_f0 )
+						if(eval[i].imag() >= - 0.5 * i_simVars.sim.plane_rotating_f0 * eps2 && eval[i].imag() <=  0.5 * i_simVars.sim.plane_rotating_f0 * eps2 )
 						{
 							//std::cout<< "IG geo mode: " << eval[i].imag() << std::endl;
 							//file_geo << eval[i].imag();
@@ -246,6 +247,7 @@ public:
 							count_geo++;
 						}
 					}
+					//std::cout << count_igpos << " " << count_igneg << " " << count_geo << std::endl;
 					//Check if we got the correct modes
 					if ( count_igpos * count_igneg * count_geo > 0 )
 					{
