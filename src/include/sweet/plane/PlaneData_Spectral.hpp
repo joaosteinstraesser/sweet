@@ -634,7 +634,7 @@ public:
 		PlaneData_Physical tmp(i_planeDataPhysical);
 		planeDataConfig->fft_physical_to_spectral(tmp.physical_space_data, this->spectral_space_data);
 		// ALWAYS zero aliasing modes after doing transformation to spectral space
-		this->spectral_zeroAliasingModes();
+		/////this->spectral_zeroAliasingModes();
 	}
 
 

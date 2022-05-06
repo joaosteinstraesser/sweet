@@ -207,7 +207,7 @@ public:
 
 		memcpy(physical_space_data, i_plane_data.physical_space_data, sizeof(double)*planeDataConfig->physical_array_data_number_of_elements);
 
-		this->dealiasing(*this);
+///		this->dealiasing(*this);
 
 		return *this;
 	}
@@ -223,7 +223,7 @@ public:
 
 		std::swap(physical_space_data, i_plane_data.physical_space_data);
 
-		this->dealiasing(*this);
+//		this->dealiasing(*this);
 
 		return *this;
 	}
