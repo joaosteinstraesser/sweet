@@ -168,6 +168,8 @@ void SWE_Plane_TS_l_rexi_na_sl_nd_etdrk::run_timestep(
 	fposy_a.spectral_set_zero();
 	fposx_d.spectral_set_zero();
 	fposy_d.spectral_set_zero();
+	fposx_d_phi0.spectral_set_zero();
+	fposy_d_phi0.spectral_set_zero();
 	if ( simVars.disc.coriolis_treatment == "advection" )
 	{
 		// The term added (and after subtracted) to (u,v) = f * k x r = (-fy, fx)
@@ -175,7 +177,7 @@ void SWE_Plane_TS_l_rexi_na_sl_nd_etdrk::run_timestep(
 		PlaneData_Physical posy_a_phys = Convert_ScalarDataArray_to_PlaneDataPhysical::convert(posy_a, planeDataConfig);
 
 		PlaneData_Physical fposx_a_phys = simVars.sim.plane_rotating_f0 * posx_a_phys;
-		PlaneData_Physical fposy_a_phys = simVars.sim.plane_rotating_f0 * posy_a_phys;
+		PlaneData_Physical fposy_a_phys = -simVars.sim.plane_rotating_f0 * posy_a_phys;
 
 		fposx_a.loadPlaneDataPhysical(fposx_a_phys);
 		fposy_a.loadPlaneDataPhysical(fposy_a_phys);
@@ -185,37 +187,37 @@ void SWE_Plane_TS_l_rexi_na_sl_nd_etdrk::run_timestep(
 		PlaneData_Physical posy_d_phys = Convert_ScalarDataArray_to_PlaneDataPhysical::convert(posy_d, planeDataConfig);
 
 		PlaneData_Physical fposx_d_phys = simVars.sim.plane_rotating_f0 * posx_d_phys;
-		PlaneData_Physical fposy_d_phys = simVars.sim.plane_rotating_f0 * posy_d_phys;
+		PlaneData_Physical fposy_d_phys = -simVars.sim.plane_rotating_f0 * posy_d_phys;
 
 		fposx_d.loadPlaneDataPhysical(fposx_d_phys);
 		fposy_d.loadPlaneDataPhysical(fposy_d_phys);
 
 		ts_phi0_rexi.run_timestep(
-				h * 0., fposx_d, fposy_d,
-				dummy, fposx_d_phi0, fposy_d_phi0,
+				h * 0., fposy_d, fposx_d,
+				dummy, fposy_d_phi0, fposx_d_phi0,
 				i_dt,
 				i_simulation_timestamp
 		);
 
-		// Handle periodicity: phi0 * fx may be larger than f * Lx
-		// idem for y
-		PlaneData_Physical fposx_d_phi0_phys = fposx_d_phi0.toPhys();
-		PlaneData_Physical fposy_d_phi0_phys = fposy_d_phi0.toPhys();
+		//////////////// Handle periodicity: phi0 * fx may be larger than f * Lx
+		//////////////// idem for y
+		//////////////PlaneData_Physical fposx_d_phi0_phys = fposx_d_phi0.toPhys();
+		//////////////PlaneData_Physical fposy_d_phi0_phys = fposy_d_phi0.toPhys();
 
-		for (std::size_t idx = 0; idx < planeDataConfig->physical_array_data_number_of_elements; idx++)
-		{
-			///double val_x = fmod(fposx_d_phi0_phys.physical_space_data[idx], simVars.sim.plane_rotating_f0 * simVars.sim.plane_domain_size[0]  );
-			///double val_y = fmod(fposy_d_phi0_phys.physical_space_data[idx], simVars.sim.plane_rotating_f0 * simVars.sim.plane_domain_size[1]  );
-			///if (val_x < 0)
-			///	val_x += simVars.sim.plane_rotating_f0 * simVars.sim.plane_domain_size[0];
-			///if (val_y < 0)
-			///	val_y += simVars.sim.plane_rotating_f0 * simVars.sim.plane_domain_size[1];
-			///fposx_d_phi0_phys.physical_space_data[idx] = val_x;
-			///fposy_d_phi0_phys.physical_space_data[idx] = val_y;
-		}
+		//////////////for (std::size_t idx = 0; idx < planeDataConfig->physical_array_data_number_of_elements; idx++)
+		//////////////{
+		//////////////	///double val_x = fmod(fposx_d_phi0_phys.physical_space_data[idx], simVars.sim.plane_rotating_f0 * simVars.sim.plane_domain_size[0]  );
+		//////////////	///double val_y = fmod(fposy_d_phi0_phys.physical_space_data[idx], simVars.sim.plane_rotating_f0 * simVars.sim.plane_domain_size[1]  );
+		//////////////	///if (val_x < 0)
+		//////////////	///	val_x += simVars.sim.plane_rotating_f0 * simVars.sim.plane_domain_size[0];
+		//////////////	///if (val_y < 0)
+		//////////////	///	val_y += simVars.sim.plane_rotating_f0 * simVars.sim.plane_domain_size[1];
+		//////////////	///fposx_d_phi0_phys.physical_space_data[idx] = val_x;
+		//////////////	///fposy_d_phi0_phys.physical_space_data[idx] = val_y;
+		//////////////}
 
-		fposx_d_phi0.loadPlaneDataPhysical(fposx_d_phi0_phys);
-		fposy_d_phi0.loadPlaneDataPhysical(fposy_d_phi0_phys);
+		//////////////fposx_d_phi0.loadPlaneDataPhysical(fposx_d_phi0_phys);
+		//////////////fposy_d_phi0.loadPlaneDataPhysical(fposy_d_phi0_phys);
 
 	}
 
@@ -693,25 +695,25 @@ void SWE_Plane_TS_l_rexi_na_sl_nd_etdrk::run_timestep(
 
 	if ( simVars.disc.coriolis_treatment == "advection" )
 	{
-		std::cout << " posy_d_phi0 " << fposy_d_phi0.toPhys().physical_reduce_min() << std::endl;
-		std::cout << " posy_d " << fposy_d.toPhys().physical_reduce_min() << std::endl;
-		std::cout << " posy_a " << fposy_a.toPhys().physical_reduce_min() << std::endl;
-		std::cout << " posy_d_phi0 " << fposy_d_phi0.toPhys().physical_reduce_max() << std::endl;
-		std::cout << " posy_d " << fposy_d.toPhys().physical_reduce_max() << std::endl;
-		std::cout << " posy_a " << fposy_a.toPhys().physical_reduce_max() << std::endl;
-		std::cout << " posy_d-posy_a " << (fposy_d.toPhys() - fposy_a.toPhys()).physical_reduce_max() << std::endl;
-		std::cout << " posy_d_phi0-posy_a " << (fposy_d_phi0.toPhys() - fposy_a.toPhys()).physical_reduce_max() << std::endl;
-		std::cout << " posy_d_phi0-posy_d " << (fposy_d_phi0.toPhys() - fposy_d.toPhys()).physical_reduce_max() << std::endl;
-		std::cout << std::endl;
-		///u = u - fposy_d_phi0 + fposy_a;
-		///v = v + fposx_d_phi0 - fposx_a;
+		////////////std::cout << " posy_d_phi0 " << fposy_d_phi0.toPhys().physical_reduce_min() << std::endl;
+		////////////std::cout << " posy_d " << fposy_d.toPhys().physical_reduce_min() << std::endl;
+		////////////std::cout << " posy_a " << fposy_a.toPhys().physical_reduce_min() << std::endl;
+		////////////std::cout << " posy_d_phi0 " << fposy_d_phi0.toPhys().physical_reduce_max() << std::endl;
+		////////////std::cout << " posy_d " << fposy_d.toPhys().physical_reduce_max() << std::endl;
+		////////////std::cout << " posy_a " << fposy_a.toPhys().physical_reduce_max() << std::endl;
+		////////////std::cout << " posy_d-posy_a " << (fposy_d.toPhys() - fposy_a.toPhys()).physical_reduce_max() << std::endl;
+		////////////std::cout << " posy_d_phi0-posy_a " << (fposy_d_phi0.toPhys() - fposy_a.toPhys()).physical_reduce_max() << std::endl;
+		////////////std::cout << " posy_d_phi0-posy_d " << (fposy_d_phi0.toPhys() - fposy_d.toPhys()).physical_reduce_max() << std::endl;
+		////////////std::cout << std::endl;
+		u = u + fposy_d_phi0 - fposy_a;
+		v = v + fposx_d_phi0 - fposx_a;
 
-		PlaneData_Physical u_phys = u.toPhys();
-		PlaneData_Physical v_phys = v.toPhys();
-		u_phys = u_phys - fposy_d_phi0.toPhys() + fposy_a.toPhys();
-		v_phys = v_phys + fposx_d_phi0.toPhys() - fposx_a.toPhys();
-		u.loadPlaneDataPhysical(u_phys);
-		v.loadPlaneDataPhysical(v_phys);
+		/////////PlaneData_Physical u_phys = u.toPhys();
+		/////////PlaneData_Physical v_phys = v.toPhys();
+		/////////u_phys = u_phys + fposy_d_phi0.toPhys() - fposy_a.toPhys();
+		/////////v_phys = v_phys + fposx_d_phi0.toPhys() - fposx_a.toPhys();
+		/////////u.loadPlaneDataPhysical(u_phys);
+		/////////v.loadPlaneDataPhysical(v_phys);
 	}
 
 
