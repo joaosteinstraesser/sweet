@@ -734,6 +734,19 @@ public:
 				benchmark.t0_error_max_abs_h_pert = (prog_h_pert - t0_prog_h_pert).toPhys().physical_reduce_max_abs();
 				benchmark.t0_error_max_abs_u = (prog_u - t0_prog_u).toPhys().physical_reduce_max_abs();
 				benchmark.t0_error_max_abs_v = (prog_v - t0_prog_v).toPhys().physical_reduce_max_abs();
+
+				std::ios init(NULL);
+				init.copyfmt(std::cout);
+				std::cout << "[MULE] errors." << std::setw(8) << std::setfill('0') << simVars.timecontrol.current_timestep_nr << ": ";
+				std::cout.copyfmt(init);
+
+				std::cout << "simtime=" << simVars.timecontrol.current_simulation_time;
+				std::cout << "\terror_linf_h=" << benchmark.t0_error_max_abs_h_pert;
+				std::cout << "\terror_linf_u=" << benchmark.t0_error_max_abs_u;
+				std::cout << "\terror_linf_v=" << benchmark.t0_error_max_abs_v;
+				std::cout << std::endl;
+
+
 			}
 
 			// Calculate linear exact solution, if compute error requests

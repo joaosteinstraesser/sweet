@@ -38,6 +38,8 @@ for key, jobs_data in job_groups.items():
         error_line_keys = []
         for i in job_data:
             tag = 'output.errors.'
+            ##tag = 'output.error_'
+            ##print(i)
             if i.startswith(tag):
                 error_line_keys.append(i)
 
@@ -45,10 +47,10 @@ for key, jobs_data in job_groups.items():
         error_line_keys.sort()
         last_error_line_key = error_line_keys[-1]
 
-        ##assert last_error_line_key == tag+"00000010"
+        #assert last_error_line_key == tag+"00000010"
 
         error_split = job_data[last_error_line_key].split("\t")
-        print(error_split)
+        ##print(error_split)
         if len(error_split) != 4:
             raise Exception("Inconsistent number of elements in error output")
 
@@ -57,7 +59,7 @@ for key, jobs_data in job_groups.items():
         if abs(float(simtime.replace('simtime=', '')) - job_data['runtime.max_simulation_time']) > 1e-10:
             continue
 
-        error_linf_phi = float(error_split[1].replace('error_linf_phi=', ''))
+        error_linf_phi = float(error_split[1].replace('error_linf_h=', ''))
 
         g = 9.80616
         gh = 29400
