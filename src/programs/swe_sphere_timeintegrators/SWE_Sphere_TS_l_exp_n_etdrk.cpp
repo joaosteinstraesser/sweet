@@ -81,6 +81,9 @@ void SWE_Sphere_TS_l_exp_n_etdrk::run_timestep(
 		io_phi = phi0_Un_phi + i_fixed_dt*phi1_FUn_phi;
 		io_vrt = phi0_Un_vrt + i_fixed_dt*phi1_FUn_vrt;
 		io_div = phi0_Un_div + i_fixed_dt*phi1_FUn_div;
+
+		io_phi.toPhys().physical_print();
+
 		return;
 	}
 	else if (timestepping_order == -2)

@@ -35,28 +35,30 @@ jg.unique_id_filter = ['runtime.simparams', 'parallelization', 'benchmark', 'run
 Runtime parameters
 """
 ##params_runtime_timestep_sizes = [30]
-params_runtime_timestep_sizes = [60]
+params_runtime_timestep_sizes = [30]
 
 jg.runtime.benchmark_name = 'geostrophic_balance'
 
-jg.runtime.space_res_spectral = 128
+##jg.runtime.space_res_spectral = 128
+jg.runtime.space_res_spectral = 32
 jg.runtime.space_res_physical = None
 
 jg.runtime.compute_error = 1
 
 # run 10 time steps
-jg.runtime.max_simulation_time = 10*30
+jg.runtime.max_simulation_time = 1*30
 
 
 # Use moderate CI-REXI values
 # Set later on
 #jg.runtime.rexi_method = 'ci'
-jg.runtime.rexi_ci_n = 16
-jg.runtime.rexi_ci_max_real = 1
-jg.runtime.rexi_ci_max_imag = 1
-jg.runtime.rexi_ci_mu = 0
-jg.runtime.rexi_ci_primitive = 'circle'
-jg.runtime.rexi_sphere_preallocation = 1
+#jg.runtime.rexi_ci_n = 16
+#jg.runtime.rexi_ci_max_real = 1
+#jg.runtime.rexi_ci_max_imag = 1
+#jg.runtime.rexi_ci_mu = 0
+#jg.runtime.rexi_ci_primitive = 'circle'
+#jg.runtime.rexi_sphere_preallocation = 1
+jg.runtime.rexi_method = 'direct'
 
 jg.runtime.instability_checks = 0
 jg.runtime.verbosity = 10
@@ -130,10 +132,14 @@ ts_methods = [
     ['lg_exp_na_sl_lc_nr_etd_uv',    2,    2,    0],
     ['l_exp_n_etdrk',    1,    1,    0],
     ['l_exp_n_etdrk',    2,    2,    0],
+    ['lg_irk_na_sl_settls_ver0_uv',    2,    2,    0],
+    ['lg_irk_lc_na_sl_settls_ver0_uv',    2,    2,    0],
+    ['lg_irk_na_sl_lc_settls_ver0_uv',    2,    2,    0],
+    ['l_irk_na_sl_settls_ver0_uv',    2,    2,    0],
 
 ]
 
-
+interp_orders = [-3];
 
 
 #
@@ -146,38 +152,49 @@ if __name__ == "__main__":
     #
     for tsm in ts_methods[1:]:
 
-        jg.runtime.timestepping_method = tsm[0]
-        jg.runtime.timestepping_order = tsm[1]
-        jg.runtime.timestepping_order2 = tsm[2]
+        for interp_order in interp_orders:
 
-        if len(tsm) > 4:
-            s = tsm[4]
-            jg.runtime.load_from_dict(tsm[4])
+            if (not "sl" in tsm[0]) and (not interp_order == -3):
+                continue;
 
-        for jg.runtime.timestep_size in params_runtime_timestep_sizes:
 
-            for (
-                jg.compile.threading,
-                jg.compile.rexi_thread_parallel_sum,
-                jg.compile.sweet_mpi
-            ) in product(
-                params_compile_threading,
-                params_compile_thread_parallel_sum,
-                params_compile_sweet_mpi
-            ):
-                if 'exp_' in jg.runtime.timestepping_method:
+            jg.runtime.timestepping_method = tsm[0]
+            jg.runtime.timestepping_order = tsm[1]
+            jg.runtime.timestepping_order2 = tsm[2]
+            jg.runtime.semi_lagrangian_interpolation_order = interp_order;
 
-                    jg.runtime.rexi_method = 'ci'
-                    jg.gen_jobscript_directory()
-                    jg.runtime.rexi_method = ''
+            if len(tsm) > 4:
+                s = tsm[4]
+                jg.runtime.load_from_dict(tsm[4])
 
-                else:
-                    if jg.compile.sweet_mpi == 'enable':
-                            continue
+            for jg.runtime.timestep_size in params_runtime_timestep_sizes:
 
-                    if jg.compile.rexi_thread_parallel_sum == 'enable':
-                            continue
+                for (
+                    jg.compile.threading,
+                    jg.compile.rexi_thread_parallel_sum,
+                    jg.compile.sweet_mpi
+                ) in product(
+                    params_compile_threading,
+                    params_compile_thread_parallel_sum,
+                    params_compile_sweet_mpi
+                ):
+                    if 'exp_' in jg.runtime.timestepping_method:
 
-                    jg.gen_jobscript_directory()
+                        if 'lc_nr' in jg.runtime.timestepping_method:
+                            jg.runtime.rexi_method = 'direct'
+                            ##jg.runtime.rexi_method = 'ci'
+                        else:
+                            jg.runtime.rexi_method = 'ci'
+                        jg.gen_jobscript_directory()
+                        jg.runtime.rexi_method = ''
+
+                    else:
+                        if jg.compile.sweet_mpi == 'enable':
+                                continue
+
+                        if jg.compile.rexi_thread_parallel_sum == 'enable':
+                                continue
+
+                        jg.gen_jobscript_directory()
 
 

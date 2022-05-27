@@ -65,7 +65,11 @@ for key, jobs_data in job_groups.items():
         gh = 29400
         rel_error_h = error_linf_phi / gh
 
-        print(job_data['runtime.timestepping_method'] + ": rel_error_h = "+str(rel_error_h))
+        print(job_data['runtime.timestepping_method'] +
+              " tso_" + str(job_data['runtime.timestepping_order']) +
+              " slI_" + str(job_data['runtime.semi_lagrangian_interpolation_order']) +
+              " Coriolis_ " + job_data['runtime.coriolis_treatment'] +
+              "\t\t\t\t: rel_error_h = "+str(rel_error_h))
         ##print(job_data['jobgeneration.job_dirpath']+ " - " + job_data['runtime.timestepping_method'] + ": rel_error_h = "+str(rel_error_h))
         errors.append(rel_error_h)
 

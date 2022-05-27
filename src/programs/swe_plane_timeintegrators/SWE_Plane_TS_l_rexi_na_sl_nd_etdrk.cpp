@@ -266,9 +266,12 @@ void SWE_Plane_TS_l_rexi_na_sl_nd_etdrk::run_timestep(
 			v = v + i_dt*psi1_FUn_v;
 		}
 
-		h = sampler2D.bicubic_scalar(h, posx_d, posy_d, -0.5, -0.5);
-		u = sampler2D.bicubic_scalar(u, posx_d, posy_d, -0.5, -0.5);
-		v = sampler2D.bicubic_scalar(v, posx_d, posy_d, -0.5, -0.5);
+		///h = sampler2D.bicubic_scalar(h, posx_d, posy_d, -0.5, -0.5);
+		///u = sampler2D.bicubic_scalar(u, posx_d, posy_d, -0.5, -0.5);
+		///v = sampler2D.bicubic_scalar(v, posx_d, posy_d, -0.5, -0.5);
+		h = sampler2D.bi_interp_scalar(h, posx_d, posy_d, simVars.disc.semi_lagrangian_interpolation_order, -0.5, -0.5);
+		u = sampler2D.bi_interp_scalar(u, posx_d, posy_d, simVars.disc.semi_lagrangian_interpolation_order, -0.5, -0.5);
+		v = sampler2D.bi_interp_scalar(v, posx_d, posy_d, simVars.disc.semi_lagrangian_interpolation_order, -0.5, -0.5);
 
 
 		// Add coriolis term to (u,v)
@@ -383,9 +386,9 @@ void SWE_Plane_TS_l_rexi_na_sl_nd_etdrk::run_timestep(
 		}
 
 
-		h = sampler2D.bicubic_scalar(h, posx_d, posy_d, -0.5, -0.5);
-		u = sampler2D.bicubic_scalar(u, posx_d, posy_d, -0.5, -0.5);
-		v = sampler2D.bicubic_scalar(v, posx_d, posy_d, -0.5, -0.5);
+		h = sampler2D.bi_interp_scalar(h, posx_d, posy_d, simVars.disc.semi_lagrangian_interpolation_order, -0.5, -0.5);
+		u = sampler2D.bi_interp_scalar(u, posx_d, posy_d, simVars.disc.semi_lagrangian_interpolation_order, -0.5, -0.5);
+		v = sampler2D.bi_interp_scalar(v, posx_d, posy_d, simVars.disc.semi_lagrangian_interpolation_order, -0.5, -0.5);
 
 		// Calculate psi1 of non interpolated nonlinear term
 		PlaneData_Spectral psi1_FUn_h_B(planeDataConfig);
@@ -458,9 +461,12 @@ void SWE_Plane_TS_l_rexi_na_sl_nd_etdrk::run_timestep(
 		//////////////////////////////PlaneData_Spectral Upsi1FUn_h_dep(planeDataConfig);
 		//////////////////////////////PlaneData_Spectral Upsi1FUn_u_dep(planeDataConfig);
 		//////////////////////////////PlaneData_Spectral Upsi1FUn_v_dep(planeDataConfig);
-		Upsi1FUn_h_dep = sampler2D.bicubic_scalar(h, posx_d, posy_d, -0.5, -0.5);
-		Upsi1FUn_u_dep = sampler2D.bicubic_scalar(u, posx_d, posy_d, -0.5, -0.5);
-		Upsi1FUn_v_dep = sampler2D.bicubic_scalar(v, posx_d, posy_d, -0.5, -0.5);
+		///Upsi1FUn_h_dep = sampler2D.bicubic_scalar(h, posx_d, posy_d, -0.5, -0.5);
+		///Upsi1FUn_u_dep = sampler2D.bicubic_scalar(u, posx_d, posy_d, -0.5, -0.5);
+		///Upsi1FUn_v_dep = sampler2D.bicubic_scalar(v, posx_d, posy_d, -0.5, -0.5);
+		Upsi1FUn_h_dep = sampler2D.bi_interp_scalar(h, posx_d, posy_d, simVars.disc.semi_lagrangian_interpolation_order,  -0.5, -0.5);
+		Upsi1FUn_u_dep = sampler2D.bi_interp_scalar(u, posx_d, posy_d, simVars.disc.semi_lagrangian_interpolation_order,  -0.5, -0.5);
+		Upsi1FUn_v_dep = sampler2D.bi_interp_scalar(v, posx_d, posy_d, simVars.disc.semi_lagrangian_interpolation_order,  -0.5, -0.5);
 
 		//Calculate psi1NU_1
 		//-----------------------
@@ -661,9 +667,12 @@ void SWE_Plane_TS_l_rexi_na_sl_nd_etdrk::run_timestep(
 		PlaneData_Spectral psi2FUn_h_dep(planeDataConfig);
 		PlaneData_Spectral psi2FUn_u_dep(planeDataConfig);
 		PlaneData_Spectral psi2FUn_v_dep(planeDataConfig);
-		psi2FUn_h_dep = sampler2D.bicubic_scalar(psi2_FUn_h, posx_d, posy_d, -0.5, -0.5);
-		psi2FUn_u_dep = sampler2D.bicubic_scalar(psi2_FUn_u, posx_d, posy_d, -0.5, -0.5);
-		psi2FUn_v_dep = sampler2D.bicubic_scalar(psi2_FUn_v, posx_d, posy_d, -0.5, -0.5);
+		//psi2FUn_h_dep = sampler2D.bicubic_scalar(psi2_FUn_h, posx_d, posy_d, -0.5, -0.5);
+		//psi2FUn_u_dep = sampler2D.bicubic_scalar(psi2_FUn_u, posx_d, posy_d, -0.5, -0.5);
+		//psi2FUn_v_dep = sampler2D.bicubic_scalar(psi2_FUn_v, posx_d, posy_d, -0.5, -0.5);
+		psi2FUn_h_dep = sampler2D.bi_interp_scalar(psi2_FUn_h, posx_d, posy_d, simVars.disc.semi_lagrangian_interpolation_order,  -0.5, -0.5);
+		psi2FUn_u_dep = sampler2D.bi_interp_scalar(psi2_FUn_u, posx_d, posy_d, simVars.disc.semi_lagrangian_interpolation_order,  -0.5, -0.5);
+		psi2FUn_v_dep = sampler2D.bi_interp_scalar(psi2_FUn_v, posx_d, posy_d, simVars.disc.semi_lagrangian_interpolation_order,  -0.5, -0.5);
 
 
 		//psi2NU_1-psi2NUn_dep

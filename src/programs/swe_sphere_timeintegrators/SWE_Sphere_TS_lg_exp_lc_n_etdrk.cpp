@@ -43,6 +43,10 @@ void SWE_Sphere_TS_lg_exp_lc_n_etdrk::run_timestep(
 {
 	const SphereData_Config *sphereDataConfig = io_phi_pert.sphereDataConfig;
 
+
+//op.fg = op.fg * 0;
+
+
 	if (timestepping_order == 0 || timestepping_order == 1)
 	{
 		/*
@@ -84,6 +88,9 @@ void SWE_Sphere_TS_lg_exp_lc_n_etdrk::run_timestep(
 		io_phi_pert = phi0_Un_h + i_fixed_dt*phi1_FUn_h;
 		io_vrt = phi0_Un_u + i_fixed_dt*phi1_FUn_u;
 		io_div = phi0_Un_v + i_fixed_dt*phi1_FUn_v;
+
+		io_phi_pert.toPhys().physical_print();
+
 	}
 	else if (timestepping_order == 2)
 	{

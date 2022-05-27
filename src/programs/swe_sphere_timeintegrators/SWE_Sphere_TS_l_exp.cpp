@@ -318,7 +318,8 @@ void SWE_Sphere_TS_l_exp::setup(
 		const std::string &i_function_name,
 		double i_timestep_size,
 		bool i_use_f_sphere,
-		bool i_no_coriolis
+		bool i_no_coriolis,
+		int nb_subintegrals
 )
 {
 	no_coriolis = i_no_coriolis;
@@ -365,7 +366,7 @@ void SWE_Sphere_TS_l_exp::setup(
 	/*
 	 * Setup REXI function evaluations
 	 */
-	expFunctions.setup(i_function_name);
+	expFunctions.setup(i_function_name, nb_subintegrals);
 
 	use_f_sphere = i_use_f_sphere;
 	use_rexi_sphere_solver_preallocation = rexiSimVars->sphere_solver_preallocation;
@@ -386,7 +387,7 @@ void SWE_Sphere_TS_l_exp::setup(
 			timestepping_method_lg_exp_direct = new SWE_Sphere_TS_lg_exp_direct(simVars, ops);
 
 		////////////timestepping_method_lg_exp_direct->setup("phi0");
-		timestepping_method_lg_exp_direct->setup(i_function_name);
+		timestepping_method_lg_exp_direct->setup(i_function_name, nb_subintegrals);
 	}
 	else if (rexiSimVars->exp_method == "ss_taylor")
 	{

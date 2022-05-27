@@ -198,9 +198,12 @@ void SWE_Plane_TS_l_cn_na_sl_nd_settls::run_timestep(
 	PlaneData_Physical rhs_u_phys = rhs_u.toPhys();
 	PlaneData_Physical rhs_v_phys = rhs_v.toPhys();
 	PlaneData_Physical rhs_h_phys = rhs_h.toPhys();
-	rhs_u = sampler2D.bicubic_scalar(rhs_u_phys, posx_d, posy_d, -0.5, -0.5);
-	rhs_v = sampler2D.bicubic_scalar(rhs_v_phys, posx_d, posy_d, -0.5, -0.5);
-	rhs_h = sampler2D.bicubic_scalar(rhs_h_phys, posx_d, posy_d, -0.5, -0.5);
+	///rhs_u = sampler2D.bicubic_scalar(rhs_u_phys, posx_d, posy_d, -0.5, -0.5);
+	///rhs_v = sampler2D.bicubic_scalar(rhs_v_phys, posx_d, posy_d, -0.5, -0.5);
+	///rhs_h = sampler2D.bicubic_scalar(rhs_h_phys, posx_d, posy_d, -0.5, -0.5);
+	rhs_u = sampler2D.bi_interp_scalar(rhs_u, posx_d, posy_d, simVars.disc.semi_lagrangian_interpolation_order, -0.5, -0.5);
+	rhs_v = sampler2D.bi_interp_scalar(rhs_v, posx_d, posy_d, simVars.disc.semi_lagrangian_interpolation_order, -0.5, -0.5);
+	rhs_h = sampler2D.bi_interp_scalar(rhs_h, posx_d, posy_d, simVars.disc.semi_lagrangian_interpolation_order, -0.5, -0.5);
 
 	if (  simVars.disc.coriolis_treatment == "advection" )
 	{
@@ -226,7 +229,8 @@ void SWE_Plane_TS_l_cn_na_sl_nd_settls::run_timestep(
 		}
 		// Average
 	        PlaneData_Physical hdiv_phys = hdiv.toPhys();
-		nonlin = 0.5*(io_h*div) + 0.5*sampler2D.bicubic_scalar(hdiv_phys, posx_d, posy_d, -0.5, -0.5);
+		//nonlin = 0.5*(io_h*div) + 0.5*sampler2D.bicubic_scalar(hdiv_phys, posx_d, posy_d, -0.5, -0.5);
+		nonlin = 0.5*(io_h*div) + 0.5*sampler2D.bi_interp_scalar(hdiv_phys, posx_d, posy_d, simVars.disc.semi_lagrangian_interpolation_order, -0.5, -0.5);
 
 		// Add to RHS h (TODO (2020-03-16): No clue why there's a -2.0)
 		rhs_h = rhs_h - 2.0*nonlin;

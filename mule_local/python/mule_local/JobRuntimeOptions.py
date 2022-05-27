@@ -139,6 +139,7 @@ class JobRuntimeOptions(InfoError):
         self.zero_geostrophic_modes = None;
         self.zero_gravity_modes = None;
 
+        self.semi_lagrangian_interpolation_order = 3;
 
         #
         # User defined parameters
@@ -288,6 +289,11 @@ class JobRuntimeOptions(InfoError):
                     if self.semi_lagrangian_convergence_threshold != None:
                         idstr += '_slc'+str("{:0.5e}".format(self.semi_lagrangian_convergence_threshold))
 
+            if not 'runtime.max_simulation_time' in filter_list:
+                if self.max_simulation_time != None:
+                    # Leading number is the total number of digits!
+                    idstr += '_T'+str("{:0.8e}".format(self.max_simulation_time))
+
 
             if not 'runtime.timestepping_size' in filter_list:
                 if self.timestep_size != None:
@@ -435,6 +441,10 @@ class JobRuntimeOptions(InfoError):
         if not 'runtime.zero_gravity_modes' in filter_list:
             if self.zero_gravity_modes != None:
                 idstr += '_zerogravitymodes'+str(self.zero_gravity_modes)
+
+        if not 'runtime.semi_lagrangian_interpolation_order' in filter_list:
+            if self.semi_lagrangian_interpolation_order != None:
+                idstr += '_intsl'+str(self.semi_lagrangian_interpolation_order)
 
         if idstr != '':
             idstr = "RT"+idstr
@@ -656,6 +666,12 @@ class JobRuntimeOptions(InfoError):
 
         if self.zero_gravity_modes != None:
             retval += ' --zero-gravity-modes='+str(self.zero_gravity_modes)
+
+
+        if self.semi_lagrangian_interpolation_order != None:
+            retval += ' --semi-lagrangian-interpolation-order='+str(self.semi_lagrangian_interpolation_order)
+
+
 
         for key, param in self.user_defined_parameters.items():
             retval += ' '+param['option']+str(param['value'])

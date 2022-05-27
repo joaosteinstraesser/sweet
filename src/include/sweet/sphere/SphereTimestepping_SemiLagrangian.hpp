@@ -794,25 +794,28 @@ public:
 		o_vrt.setup_if_required(i_phi.sphereDataConfig);
 		o_div.setup_if_required(i_phi.sphereDataConfig);
 
-		o_phi = sphereSampler.bicubic_scalar_ret_phys(
+		o_phi = sphereSampler.bi_interp_scalar_ret_phys(
 				i_phi.toPhys(),
 				i_pos_lon_d, i_pos_lat_d,
+				simVars.disc.semi_lagrangian_interpolation_order,
 				false,
 				simVars.disc.semi_lagrangian_sampler_use_pole_pseudo_points,
 				simVars.disc.semi_lagrangian_interpolation_limiter
 			);
 
-		o_vrt = sphereSampler.bicubic_scalar_ret_phys(
+		o_vrt = sphereSampler.bi_interp_scalar_ret_phys(
 				i_vrt.toPhys(),
 				i_pos_lon_d, i_pos_lat_d,
+				simVars.disc.semi_lagrangian_interpolation_order,
 				false,
 				simVars.disc.semi_lagrangian_sampler_use_pole_pseudo_points,
 				simVars.disc.semi_lagrangian_interpolation_limiter
 			);
 
-		o_div = sphereSampler.bicubic_scalar_ret_phys(
+		o_div = sphereSampler.bi_interp_scalar_ret_phys(
 				i_div.toPhys(),
 				i_pos_lon_d, i_pos_lat_d,
+				simVars.disc.semi_lagrangian_interpolation_order,
 				false,
 				simVars.disc.semi_lagrangian_sampler_use_pole_pseudo_points,
 				simVars.disc.semi_lagrangian_interpolation_limiter
@@ -849,9 +852,10 @@ public:
 		 * Phi
 		 *************************************************************************
 		 */
-		o_phi = sphereSampler.bicubic_scalar_ret_phys(
+		o_phi = sphereSampler.bi_interp_scalar_ret_phys(
 				i_phi.toPhys(),
 				i_pos_lon_D, i_pos_lat_D,
+				simVars.disc.semi_lagrangian_interpolation_order,
 				false,
 				simVars.disc.semi_lagrangian_sampler_use_pole_pseudo_points,
 				simVars.disc.semi_lagrangian_interpolation_limiter
@@ -910,17 +914,19 @@ public:
 		SphereData_Physical u_tmp, v_tmp;
 		i_ops.vrtdiv_to_uv(i_vrt, i_div, u_tmp, v_tmp);
 
-		SphereData_Physical u_tmp_D = sphereSampler.bicubic_scalar_ret_phys(
+		SphereData_Physical u_tmp_D = sphereSampler.bi_interp_scalar_ret_phys(
 				u_tmp,
 				i_pos_lon_D, i_pos_lat_D,
+				simVars.disc.semi_lagrangian_interpolation_order,
 				true,
 				simVars.disc.semi_lagrangian_sampler_use_pole_pseudo_points,
 				simVars.disc.semi_lagrangian_interpolation_limiter
 			);
 
-		SphereData_Physical v_tmp_D = sphereSampler.bicubic_scalar_ret_phys(
+		SphereData_Physical v_tmp_D = sphereSampler.bi_interp_scalar_ret_phys(
 				v_tmp,
 				i_pos_lon_D, i_pos_lat_D,
+				simVars.disc.semi_lagrangian_interpolation_order,
 				true,
 				simVars.disc.semi_lagrangian_sampler_use_pole_pseudo_points,
 				simVars.disc.semi_lagrangian_interpolation_limiter

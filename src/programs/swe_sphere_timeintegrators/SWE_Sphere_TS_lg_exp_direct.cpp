@@ -81,12 +81,13 @@ SWE_Sphere_TS_lg_exp_direct::~SWE_Sphere_TS_lg_exp_direct()
  * setup the REXI
  */
 void SWE_Sphere_TS_lg_exp_direct::setup(
-		const std::string &i_function_name
+		const std::string &i_function_name,
+		int nb_subintegrals
 )
 {
 	function_name = i_function_name;
 
-	rexiFunctions.setup(i_function_name);
+	rexiFunctions.setup(i_function_name, nb_subintegrals);
 }
 
 

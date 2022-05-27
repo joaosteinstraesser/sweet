@@ -92,7 +92,8 @@ public:
 	 */
 public:
 	void setup(
-			const std::string &i_function_name
+			const std::string &i_function_name,
+			int nb_subintegrals = 1
 	);
 
 

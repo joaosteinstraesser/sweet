@@ -36,10 +36,17 @@ class EXPFunctions
 
 		PSI1,
 		PSI2,
-		PSI3
+		PSI3,
+
+		CHI1
 	};
 
 	fun_id_enum function_id;
+
+	/**************************************************
+	* Number of subintegrals
+	*/
+	int nb_subintegrals = 1;
 
 
 public:
@@ -93,7 +100,8 @@ public:
 
 public:
 	void setup(
-			const std::string &i_function_name
+			const std::string &i_function_name,
+			int i_nb_subintegrals = 1
 	)
 	{
 		if (i_function_name  == "phi0")
@@ -124,8 +132,13 @@ public:
 		else if (i_function_name  == "psi3")
 			function_id = PSI3;
 
+		else if (i_function_name  == "chi1")
+			function_id = CHI1;
+
 		else
 			SWEETError("This phi function is not supported! : ");
+
+		nb_subintegrals = i_nb_subintegrals;
 	}
 
 
@@ -449,6 +462,86 @@ public:
 	}
 
 
+
+	/*
+	 * \chi_N: Series-based computation
+	 *
+	 * This avoids the singularity close to 0
+	 */
+	std::complex<T> chiNSeries(
+		int n,
+		const std::complex<T> &z
+	)
+	{
+
+		double p = (double)nb_subintegrals;
+
+		std::complex<T> powz = 1.0;
+		double powp = 1.0;
+		T facn = factorial(n);
+
+		std::complex<T> retval = powz/facn;
+
+		for (int i = 1; i < 20; i++)
+		{
+			powz *= z;
+			powp *= (p - 1.) / p;
+			facn *= (n+i);
+
+			retval += powz/facn * (1. - powp);
+		}
+
+		return retval;
+	}
+
+
+	/*
+	 * Semi-Lagrangian chi functions
+	 */
+	std::complex<T> chiN(
+			int n,
+			const std::complex<T> &i_K
+	)
+	{
+
+		int p = nb_subintegrals;
+
+		// for tests of numerical instability
+//		T lamdt = i_K.real()*i_K.real() + i_K.imag()*i_K.imag();
+
+		switch(n)
+		{
+		case 1:	// chi1
+		{
+			T linf = i_K.real()*i_K.real() + i_K.imag()*i_K.imag();
+			if (linf < 0.2)
+				return chiNSeries(n, i_K);
+			else
+				return (T)1.0 / i_K * ( l_expcplx(i_K) - l_expcplx( ( (T)1. - (T)1.0 / (T)p ) * i_K) );
+			break;
+		}
+
+		case 2:	// psi2
+			break;
+
+		default:
+			SWEETError("This chi number is not yet supported");
+		}
+
+		return -1;
+	}
+
+
+
+
+
+
+
+
+
+
+
+
 	/**
 	 * Evaluate the function (phi/ups)
 	 */
@@ -499,6 +592,9 @@ public:
 
 		case PSI3:
 			return psiN(3, i_K);
+
+		case CHI1:
+			return chiN(1, i_K);
 
 		default:
 			SWEETError("This phi is not yet supported");

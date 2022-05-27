@@ -23,6 +23,9 @@
 
 class SWE_Sphere_TS_lg_exp_na_sl_lc_nr_etdrk_uv	: public SWE_Sphere_TS_interface
 {
+
+int nb_subintegrals = 10;
+
 public:
 	bool implements_timestepping_method(const std::string &i_timestepping_method);
 	std::string string_id();
@@ -52,6 +55,14 @@ public:
 
 	SWE_Sphere_TS_l_exp ts_psi1_exp;
 	SWE_Sphere_TS_l_exp ts_psi2_exp;
+
+////////	SWE_Sphere_TS_l_exp ts_ups0_exp;
+////////	SWE_Sphere_TS_l_exp ts_ups1_exp;
+////////	SWE_Sphere_TS_l_exp ts_ups2_exp;
+////////	SWE_Sphere_TS_l_exp ts_ups3_exp;
+
+	SWE_Sphere_TS_l_exp ts_chi1_exp;
+
 
 	SphereTimestepping_SemiLagrangian semiLagrangian;
 	SphereOperators_Sampler_SphereDataPhysical &sphereSampler;

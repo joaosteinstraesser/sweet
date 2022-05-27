@@ -687,6 +687,9 @@ public:
 		/// Order of 2nd time stepping which might be used
 		int timestepping_order2 = -1;
 
+		// Interpolation order in SL
+		int semi_lagrangian_interpolation_order = 3;
+
 		// Treatment of coriolis term (linear, nonlinear or advection)
 		std::string coriolis_treatment = "linear";
 
@@ -722,6 +725,7 @@ public:
 			std::cout << " + semi_lagrangian_sampler_use_pole_pseudo_points: " << semi_lagrangian_sampler_use_pole_pseudo_points << std::endl;
 			std::cout << " + semi_lagrangian_convergence_threshold: " << semi_lagrangian_convergence_threshold << std::endl;
 			std::cout << " + semi_lagrangian_approximate_sphere_geometry: " << semi_lagrangian_approximate_sphere_geometry << std::endl;
+			std::cout << " + semi_lagrangian_interpolation_order: " << semi_lagrangian_interpolation_order << std::endl;
 			//std::cout << " + plane_term_no_coriolis: " << plane_linear_term_no_coriolis << std::endl;
 			std::cout << " + coriolis_treatment: " << coriolis_treatment << std::endl;
 			std::cout << " + zero_geostrophic_modes: " << zero_geostrophic_modes << std::endl;
@@ -772,6 +776,7 @@ public:
 			std::cout << "	--semi-lagrangian-interpolation-limiter [bool]	Use limiter for cubic interpolation" << std::endl;
 			std::cout << "	--semi-lagrangian-convergence-threshold [float]	Threshold to stop iterating, Use -1 to disable" << std::endl;
 			std::cout << "	--semi-lagrangian-approximate-sphere-geometry [int]	0: no approximation, 1: Richies approximation, default: 0" << std::endl;
+			std::cout << "	--semi-lagrangian-interpolation-order [int]	default: 3" << std::endl;
 			///std::cout << "	--plane-linear-term-no-coriolis [0;1]	0: coriolis inclued in linear term, 1: not included, default: 0" << std::endl;
 			std::cout << "	--coriolis-treatment [string]	0: linear, nonlinear or advection, default: linear" << std::endl;
 			std::cout << "	--zero-geostrophic-modes [0;1]	0: consider geostrophic modes, 1: ignore influence of geostrophic modes, default: 0" << std::endl;
@@ -822,6 +827,9 @@ public:
 	        next_free_program_option++;
 
 	        long_options[next_free_program_option] = {"space-grid-use-c-staggering", required_argument, 0, 256+next_free_program_option};
+	        next_free_program_option++;
+
+	        long_options[next_free_program_option] = {"semi-lagrangian-interpolation-order", required_argument, 0, 256+next_free_program_option};
 	        next_free_program_option++;
 
 	        //long_options[next_free_program_option] = {"plane-linear-term-no-coriolis", required_argument, 0, 256+next_free_program_option};
@@ -901,24 +909,28 @@ public:
 				space_grid_use_c_staggering = atof(i_value);
 				return -1;
 
+			case 12:
+				semi_lagrangian_interpolation_order = atoi(i_value);
+				return -1;
+
 			//case 12:
 			//	plane_linear_term_no_coriolis = atoi(i_value);
 			//	return -1;
 
-			case 12:
+			case 13:
 				coriolis_treatment = i_value;
 				return -1;
 
-			case 13:
+			case 14:
 				zero_geostrophic_modes = atof(i_value);
 				return -1;
 
-			case 14:
+			case 15:
 				zero_gravity_modes = atof(i_value);
 				return -1;
 			}
 
-			return 15;
+			return 16;
 		}
 	} disc;
 

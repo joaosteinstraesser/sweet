@@ -278,6 +278,9 @@ void SWE_Sphere_TS_lg_exp_na_sl_lc_nr_etd_uv::run_timestep(
 		U_vrt_prev = U_vrt;
 		U_div_prev = U_div;
 	}
+
+	U_phi.toPhys().physical_print();
+
 }
 
 
