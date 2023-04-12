@@ -47,17 +47,9 @@ class JobCompileOptions(InfoError):
 
         # Compile options
         self.mode = 'release'
-        self.compiler = 'gnu'
 
-        self.sanitize = ''
-
-        self.debug_symbols = 'enable'
+        self.debug_symbols = 'disable'
         self.simd = 'enable'
-        self.mic = 'disable'
-
-        self.gxx_toolchain = ''
-        self.cxx_flags = ''
-        self.ld_flags = ''
 
         self.fortran_source = 'disable'
 
@@ -83,8 +75,23 @@ class JobCompileOptions(InfoError):
         self.program = ''
         self.unit_test = ''
 
-        # PinT
+        # Parareal
         self.parareal = 'none'
+        self.parareal_scalar = 'disable'
+        self.parareal_plane = 'disable'
+        self.parareal_sphere = 'disable'
+        self.parareal_plane_swe = 'disable'
+        self.parareal_plane_burgers = 'disable'
+
+        # XBraid
+        self.xbraid = 'none'
+        self.xbraid_scalar = 'disable'
+        self.xbraid_plane = 'disable'
+        self.xbraid_sphere = 'disable'
+        self.xbraid_plane_swe = 'disable'
+        self.xbraid_plane_burgers = 'disable'
+
+        #LibPFASST
         self.libpfasst = 'disable'
 
         # Eigen library
@@ -125,18 +132,8 @@ class JobCompileOptions(InfoError):
     def getSConsParams(self):
         retval = ''
         retval += ' --mode='+self.mode
-        retval += ' --compiler='+self.compiler
-        retval += ' --sanitize='+self.sanitize
         retval += ' --debug-symbols='+("enable" if self.debug_symbols else "disable")
         retval += ' --simd='+self.simd
-        retval += ' --mic='+self.mic
-
-        if self.gxx_toolchain != '':
-            retval += ' --gxx-toolchain='+self.gxx_toolchain
-        if self.cxx_flags != '':
-            retval += ' --cxx-flags='+self.cxx_flags
-        if self.ld_flags:
-            retval += ' --ld-flags='+self.ld_flags
 
         retval += ' --fortran-source='+self.fortran_source
 
@@ -158,8 +155,24 @@ class JobCompileOptions(InfoError):
         if self.unit_test != '':
             retval += ' --unit-test='+self.unit_test
 
-        # PinT
+        # Parareal
         retval += ' --parareal='+self.parareal
+        retval += ' --parareal-scalar='+self.parareal_scalar
+        retval += ' --parareal-plane='+self.parareal_plane
+        retval += ' --parareal-sphere='+self.parareal_sphere
+        retval += ' --parareal-plane-swe='+self.parareal_plane_swe
+        retval += ' --parareal-plane-burgers='+self.parareal_plane_burgers
+
+        # XBraid
+        retval += ' --xbraid='+self.xbraid
+        retval += ' --xbraid-scalar='+self.xbraid_scalar
+        retval += ' --xbraid-plane='+self.xbraid_plane
+        retval += ' --xbraid-sphere='+self.xbraid_sphere
+        retval += ' --xbraid-plane-swe='+self.xbraid_plane_swe
+        retval += ' --xbraid-plane-burgers='+self.xbraid_plane_burgers
+
+
+        # LibPFASST
         retval += ' --libpfasst='+self.libpfasst
 
         retval += ' --eigen='+self.eigen
@@ -232,34 +245,6 @@ class JobCompileOptions(InfoError):
                 help='specify compilation mode to use: debug, release [default: %default]'
         )
         self.mode = scons.GetOption('mode')
-
-
-        scons.AddOption(    '--compiler',
-                dest='compiler',
-                type='choice',
-                choices=['gnu', 'intel', 'llvm', 'pgi'],
-                default='gnu',
-                help='specify compiler to use: gnu, intel, llvm, pgi [default: %default]'
-        )
-        self.compiler = scons.GetOption('compiler')
-
-        scons.AddOption(    '--sanitize',
-                dest='sanitize',
-                type='string',
-                default='',
-                help='specify sanitize to forward to the compiler'
-        )
-        self.sanitize = scons.GetOption('sanitize')
-
-
-        scons.AddOption(    '--gxx-toolchain',
-                dest='gxx-toolchain',
-                type='string',
-                default='',
-                help='specify gcc toolchain for intel and llvm compiler, e.g. g++-4.6, default: deactivated'
-        )
-        self.gxx_toolchain = scons.GetOption('gxx-toolchain')
-
 
         scons.AddOption(    '--simd',
                 dest='simd',
@@ -371,16 +356,6 @@ class JobCompileOptions(InfoError):
                 help="Enable Intel MKL [default: %default]"
         )
         self.mkl = scons.GetOption('mkl')
-
-
-        scons.AddOption(    '--mic',
-                dest='mic',
-                type='choice',
-                choices=['enable', 'disable'],
-                default='disable',
-                help="Enable Intel MIC (XeonPhi) [default: %default]"
-        )
-        self.mic = scons.GetOption('mic')
 
 
         #
@@ -499,6 +474,106 @@ class JobCompileOptions(InfoError):
         )
         self.parareal = scons.GetOption('parareal')
 
+        scons.AddOption(    '--parareal-scalar',
+                dest='parareal_scalar',
+                type='choice',
+                choices=['enable', 'disable'],
+                default='0',
+                help='Enable Parareal for scalar problems (enable, disable) [default: %default]'
+        )
+        self.parareal_scalar = scons.GetOption('parareal_scalar')
+
+        scons.AddOption(    '--parareal-plane',
+                dest='parareal_plane',
+                type='choice',
+                choices=['enable', 'disable'],
+                default='0',
+                help='Enable Parareal on the plane (enable, disable) [default: %default]'
+        )
+        self.parareal_plane = scons.GetOption('parareal_plane')
+
+        scons.AddOption(    '--parareal-sphere',
+                dest='parareal_sphere',
+                type='choice',
+                choices=['enable', 'disable'],
+                default='0',
+                help='Enable Parareal on the sphere (enable, disable) [default: %default]'
+        )
+        self.parareal_sphere = scons.GetOption('parareal_sphere')
+
+        scons.AddOption(    '--parareal-plane-swe',
+                dest='parareal_plane_swe',
+                type='choice',
+                choices=['enable', 'disable'],
+                default='0',
+                help='Enable Parareal for SWE on the plane (enable, disable) [default: %default]'
+        )
+        self.parareal_plane_swe = scons.GetOption('parareal_plane_swe')
+
+        scons.AddOption(    '--parareal-plane-burgers',
+                dest='parareal_plane_burgers',
+                type='choice',
+                choices=['enable', 'disable'],
+                default='0',
+                help='Enable Parareal for Burgers on the plane (enable, disable) [default: %default]'
+        )
+        self.parareal_plane_burgers = scons.GetOption('parareal_plane_burgers')
+
+        scons.AddOption(    '--xbraid',
+                dest='xbraid',
+                type='choice',
+                choices=['none', 'mpi'],
+                default='none',
+                help='Enable XBBraid (none,  mpi) [default: %default]\nOnly works, if XBraid is supported by the simulation'
+        )
+        self.xbraid = scons.GetOption('xbraid')
+
+        scons.AddOption(    '--xbraid-scalar',
+                dest='xbraid_scalar',
+                type='choice',
+                choices=['enable', 'disable'],
+                default='0',
+                help='Enable XBraid for scalar problems (enable, disable) [default: %default]'
+        )
+        self.xbraid_scalar = scons.GetOption('xbraid_scalar')
+
+        scons.AddOption(    '--xbraid-plane',
+                dest='xbraid_plane',
+                type='choice',
+                choices=['enable', 'disable'],
+                default='0',
+                help='Enable XBraid on the plane (enable, disable) [default: %default]'
+        )
+        self.xbraid_plane = scons.GetOption('xbraid_plane')
+
+        scons.AddOption(    '--xbraid-sphere',
+                dest='xbraid_sphere',
+                type='choice',
+                choices=['enable', 'disable'],
+                default='0',
+                help='Enable XBraid on the sphere (enable, disable) [default: %default]'
+        )
+        self.xbraid_sphere = scons.GetOption('xbraid_sphere')
+
+        scons.AddOption(    '--xbraid-plane-swe',
+                dest='xbraid_plane_swe',
+                type='choice',
+                choices=['enable', 'disable'],
+                default='0',
+                help='Enable XBraid for SWE on the plane (enable, disable) [default: %default]'
+        )
+        self.xbraid_plane_swe = scons.GetOption('xbraid_plane_swe')
+
+        scons.AddOption(    '--xbraid-plane-burgers',
+                dest='xbraid_plane_burgers',
+                type='choice',
+                choices=['enable', 'disable'],
+                default='0',
+                help='Enable XBraid for Burgers on the plane (enable, disable) [default: %default]'
+        )
+        self.xbraid_plane_burgers = scons.GetOption('xbraid_plane_burgers')
+
+
 
         files = os.listdir('src/programs/')
         files = sorted(files)
@@ -515,6 +590,31 @@ class JobCompileOptions(InfoError):
                 help='Specify program to compile: '+', '.join(example_programs)+' '*80+' [default: %default]'
         )
         self.program = scons.GetOption('program')
+
+
+        if not self.parareal == 'none':
+            if self.program == "parareal_ode":
+                self.parareal_scalar = 'enable';
+            elif self.program == 'swe_plane' or self.program == 'burgers':
+                self.parareal_plane = 'enable';
+                if self.program == 'swe_plane':
+                    self.parareal_plane_swe = 'enable';
+                elif self.program == 'burgers':
+                    self.parareal_plane_burgers = 'enable';
+            elif self.program == 'swe_sphere':
+                self.parareal_sphere = 'enable';
+
+        if not self.xbraid == 'none':
+            if self.program == "parareal_ode":
+                self.xbraid_scalar = 'enable';
+            elif self.program == 'swe_plane' or self.program == 'burgers':
+                self.xbraid_plane = 'enable';
+                if self.program == 'swe_plane':
+                    self.xbraid_plane_swe = 'enable';
+                elif self.program == 'burgers':
+                    self.xbraid_plane_burgers = 'enable';
+            elif self.program == 'swe_sphere':
+                self.xbraid_sphere = 'enable';
 
 
         scons.AddOption(      '--program-binary-name',
@@ -554,25 +654,6 @@ class JobCompileOptions(InfoError):
                 help='Threading to use '+' / '.join(threading_constraints)+', default: off'
         )
         self.threading = scons.GetOption('threading')
-
-
-        scons.AddOption(    '--cxx-flags',
-                dest='cxx_flags',
-                type='string',    
-                default='',
-                help='Additional cxx-flags, default: ""'
-        )
-
-        self.cxx_flags = scons.GetOption('cxx_flags')
-
-
-        scons.AddOption(    '--ld-flags',
-                dest='ld_flags',
-                type='string',    
-                default='',
-                help='Additional ld-flags, default: ""'
-        )
-
 
 
     def getProgramName(self, ignore_errors = False):
@@ -731,10 +812,6 @@ class JobCompileOptions(InfoError):
             if self.libfft == 'enable':
                 retval+='_fft'
 
-            retval += '_'+self.compiler
-
-            if self.sanitize != '':
-                retval += '_'+self.sanitize.replace(',', '_')
 
         if self.benchmark_timings == 'enable':
             retval+='_benchtime'

@@ -34,7 +34,8 @@ public:
 		benchmark_name = i_benchmark_name;
 
 		return
-			i_benchmark_name == "three_gaussian_bumps"	||
+			i_benchmark_name == "three_gaussian_bumps"		||
+			i_benchmark_name == "three_gaussian_bumps_phi_pint"	||
 			false
 		;
 	}
@@ -105,20 +106,31 @@ public:
 				simVars->sim.sphere_rotating_coriolis_omega = 7.292e-5;
 				simVars->sim.gravitation = 9.80616;
 				simVars->sim.sphere_radius = 6.37122e6;
-				simVars->sim.h0 = 29400.0/simVars->sim.gravitation;
+				if (benchmark_name == "three_gaussian_bumps_phi_pint")
+					simVars->sim.h0 = 29400.0;
+				else
+				{
+					simVars->sim.h0 = 29400.0/simVars->sim.gravitation;
 
-				// Scale geopotential to make NL influencing the stiffness stronger
-				simVars->sim.h0 *= 0.2;
-				simVars->sim.gravitation *= 0.2;
+					// Scale geopotential to make NL influencing the stiffness stronger
+					simVars->sim.h0 *= 0.2;
+					simVars->sim.gravitation *= 0.2;
+				}
 
 				ops->setup(ops->sphereDataConfig, &(simVars->sim));
 			}
 		}
 
+		double phi_scale;
+		if (benchmark_name == "three_gaussian_bumps_phi_pint")
+			phi_scale = 6000 * simVars->sim.gravitation;
+		else
+			phi_scale = 0.1*simVars->sim.h0;
+
 		o_phi_pert.spectral_set_zero();
-		o_phi_pert += get_gaussian_bump(2.0*M_PI*0.1, M_PI/3, 20.0)*0.1*simVars->sim.h0;
-		o_phi_pert += get_gaussian_bump(2.0*M_PI*0.6, M_PI/5.0, 80.0)*0.1*simVars->sim.h0;
-		o_phi_pert += get_gaussian_bump(2.0*M_PI*0.8, -M_PI/4, 360.0)*0.1*simVars->sim.h0;
+		o_phi_pert += get_gaussian_bump(2.0*M_PI*0.1, M_PI/3, 20.0)*phi_scale;
+		o_phi_pert += get_gaussian_bump(2.0*M_PI*0.6, M_PI/5.0, 80.0)*phi_scale;
+		o_phi_pert += get_gaussian_bump(2.0*M_PI*0.8, -M_PI/4, 360.0)*phi_scale;
 
 		o_vrt.spectral_set_zero();
 		o_div.spectral_set_zero();

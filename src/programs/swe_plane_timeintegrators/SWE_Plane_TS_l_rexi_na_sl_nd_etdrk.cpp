@@ -61,13 +61,6 @@ void SWE_Plane_TS_l_rexi_na_sl_nd_etdrk::euler_timestep_update_nonlinear(
 		}
 
 	}
-
-	if ( simVars.disc.coriolis_treatment == "nonlinear" )
-	{
-		o_u_t += simVars.sim.plane_rotating_f0 * i_v;
-		o_v_t -= simVars.sim.plane_rotating_f0 * i_u;
-	}
-
 }
 
 
@@ -108,12 +101,14 @@ void SWE_Plane_TS_l_rexi_na_sl_nd_etdrk::run_timestep(
 
 	if (i_simulation_timestamp == 0)
 	{
+#if (!SWEET_PARAREAL) && (!SWEET_XBRAID)
 		/*
 		 * First time step
 		 */
 		h_prev = io_h;
 		u_prev = io_u;
 		v_prev = io_v;
+#endif
 	}
 
 
@@ -121,22 +116,6 @@ void SWE_Plane_TS_l_rexi_na_sl_nd_etdrk::run_timestep(
 	u = io_u;
 	v = io_v;
 	h = io_h;
-
-	//////////////////////////////////////////////////////////////
-	// Declare quantities common to several timestepping orders //
-	//////////////////////////////////////////////////////////////
-	// psi1 applied to N(U_0)
-	PlaneData_Spectral psi1_FUn_h(planeDataConfig);
-	PlaneData_Spectral psi1_FUn_u(planeDataConfig);
-	PlaneData_Spectral psi1_FUn_v(planeDataConfig);
-	// Interpolated (.5 * psi1NUn + U) to departure points ( )_*
-	PlaneData_Spectral Upsi1FUn_h_dep(planeDataConfig);
-	PlaneData_Spectral Upsi1FUn_u_dep(planeDataConfig);
-	PlaneData_Spectral Upsi1FUn_v_dep(planeDataConfig);
-
-
-
-
 
 	// Calculate departure points - always force to be second order accurate!
 	semiLagrangian.semi_lag_departure_points_settls(
@@ -153,76 +132,7 @@ void SWE_Plane_TS_l_rexi_na_sl_nd_etdrk::run_timestep(
 			simVars.disc.semi_lagrangian_convergence_threshold
 	);
 
-	////////////////////////////////////
-	// Coriolis in advection: f * pos //
-	////////////////////////////////////
-	// Position x and y
-	PlaneData_Spectral dummy(planeDataConfig);
-	PlaneData_Spectral fposx_a(planeDataConfig);
-	PlaneData_Spectral fposy_a(planeDataConfig);
-	PlaneData_Spectral fposx_d(planeDataConfig);
-	PlaneData_Spectral fposy_d(planeDataConfig);
-	PlaneData_Spectral fposx_d_phi0(planeDataConfig);
-	PlaneData_Spectral fposy_d_phi0(planeDataConfig);
-	fposx_a.spectral_set_zero();
-	fposy_a.spectral_set_zero();
-	fposx_d.spectral_set_zero();
-	fposy_d.spectral_set_zero();
-	fposx_d_phi0.spectral_set_zero();
-	fposy_d_phi0.spectral_set_zero();
-	if ( simVars.disc.coriolis_treatment == "advection" )
-	{
-		// The term added (and after subtracted) to (u,v) = f * k x r = (-fy, fx)
-		PlaneData_Physical posx_a_phys = Convert_ScalarDataArray_to_PlaneDataPhysical::convert(posx_a, planeDataConfig);
-		PlaneData_Physical posy_a_phys = Convert_ScalarDataArray_to_PlaneDataPhysical::convert(posy_a, planeDataConfig);
-
-		PlaneData_Physical fposx_a_phys = simVars.sim.plane_rotating_f0 * posx_a_phys;
-		PlaneData_Physical fposy_a_phys = -simVars.sim.plane_rotating_f0 * posy_a_phys;
-
-		fposx_a.loadPlaneDataPhysical(fposx_a_phys);
-		fposy_a.loadPlaneDataPhysical(fposy_a_phys);
-
-		// The term added (and after subtracted) to (u,v) = f * k x r = (-fy, fx)
-		PlaneData_Physical posx_d_phys = Convert_ScalarDataArray_to_PlaneDataPhysical::convert(posx_d, planeDataConfig);
-		PlaneData_Physical posy_d_phys = Convert_ScalarDataArray_to_PlaneDataPhysical::convert(posy_d, planeDataConfig);
-
-		PlaneData_Physical fposx_d_phys = simVars.sim.plane_rotating_f0 * posx_d_phys;
-		PlaneData_Physical fposy_d_phys = -simVars.sim.plane_rotating_f0 * posy_d_phys;
-
-		fposx_d.loadPlaneDataPhysical(fposx_d_phys);
-		fposy_d.loadPlaneDataPhysical(fposy_d_phys);
-
-		ts_phi0_rexi.run_timestep(
-				h * 0., fposy_d, fposx_d,
-				dummy, fposy_d_phi0, fposx_d_phi0,
-				i_dt,
-				i_simulation_timestamp
-		);
-
-		//////////////// Handle periodicity: phi0 * fx may be larger than f * Lx
-		//////////////// idem for y
-		//////////////PlaneData_Physical fposx_d_phi0_phys = fposx_d_phi0.toPhys();
-		//////////////PlaneData_Physical fposy_d_phi0_phys = fposy_d_phi0.toPhys();
-
-		//////////////for (std::size_t idx = 0; idx < planeDataConfig->physical_array_data_number_of_elements; idx++)
-		//////////////{
-		//////////////	///double val_x = fmod(fposx_d_phi0_phys.physical_space_data[idx], simVars.sim.plane_rotating_f0 * simVars.sim.plane_domain_size[0]  );
-		//////////////	///double val_y = fmod(fposy_d_phi0_phys.physical_space_data[idx], simVars.sim.plane_rotating_f0 * simVars.sim.plane_domain_size[1]  );
-		//////////////	///if (val_x < 0)
-		//////////////	///	val_x += simVars.sim.plane_rotating_f0 * simVars.sim.plane_domain_size[0];
-		//////////////	///if (val_y < 0)
-		//////////////	///	val_y += simVars.sim.plane_rotating_f0 * simVars.sim.plane_domain_size[1];
-		//////////////	///fposx_d_phi0_phys.physical_space_data[idx] = val_x;
-		//////////////	///fposy_d_phi0_phys.physical_space_data[idx] = val_y;
-		//////////////}
-
-		//////////////fposx_d_phi0.loadPlaneDataPhysical(fposx_d_phi0_phys);
-		//////////////fposy_d_phi0.loadPlaneDataPhysical(fposy_d_phi0_phys);
-
-	}
-
-
-	if (timestepping_order == 1 || timestepping_order == 2 || timestepping_order == -2 || timestepping_order == -22)
+	if (timestepping_order == 1 || timestepping_order == 2)
 	{
 		/*
 		 * U_{1} = \phi_{0}( \Delta t L ) [
@@ -248,9 +158,9 @@ void SWE_Plane_TS_l_rexi_na_sl_nd_etdrk::run_timestep(
 
 
 			//Apply psi_1 to N(U_{0})
-			/////PlaneData_Spectral psi1_FUn_h(planeDataConfig);
-			/////PlaneData_Spectral psi1_FUn_u(planeDataConfig);
-			/////PlaneData_Spectral psi1_FUn_v(planeDataConfig);
+			PlaneData_Spectral psi1_FUn_h(planeDataConfig);
+			PlaneData_Spectral psi1_FUn_u(planeDataConfig);
+			PlaneData_Spectral psi1_FUn_v(planeDataConfig);
 
 			ts_psi1_rexi.run_timestep(
 					FUn_h, FUn_u, FUn_v,
@@ -266,45 +176,11 @@ void SWE_Plane_TS_l_rexi_na_sl_nd_etdrk::run_timestep(
 			v = v + i_dt*psi1_FUn_v;
 		}
 
-		///h = sampler2D.bicubic_scalar(h, posx_d, posy_d, -0.5, -0.5);
-		///u = sampler2D.bicubic_scalar(u, posx_d, posy_d, -0.5, -0.5);
-		///v = sampler2D.bicubic_scalar(v, posx_d, posy_d, -0.5, -0.5);
-		h = sampler2D.bi_interp_scalar(h, posx_d, posy_d, simVars.disc.semi_lagrangian_interpolation_order, -0.5, -0.5);
-		u = sampler2D.bi_interp_scalar(u, posx_d, posy_d, simVars.disc.semi_lagrangian_interpolation_order, -0.5, -0.5);
-		v = sampler2D.bi_interp_scalar(v, posx_d, posy_d, simVars.disc.semi_lagrangian_interpolation_order, -0.5, -0.5);
 
 
-		// Add coriolis term to (u,v)
-		// IT is known analytically, therefore no need of interpolation // 20197-ifs-documentation-cy47r3-part-iii-dynamics-and-numerical-procedures.pdf
-		// Store it in u_with_coriolis, interpolate it and apply phi
-		// and let (u,v) as usual to compute nonlinear term in higher orders
-		PlaneData_Spectral tmp_u = u;
-		if ( simVars.disc.coriolis_treatment == "advection" )
-		{
-			///u = u + fposy_d;
-			///v = v + fposx_d;
-
-			///u.loadPlaneDataPhysical(u.toPhys() + fposy_d.toPhys());
-			///v.loadPlaneDataPhysical(v.toPhys() + fposx_d.toPhys());
-
-
-			//////////u_with_coriolis = u + fposy;
-			//////////v_with_coriolis = v + fposx;
-
-			//////////u_with_coriolis = sampler2D.bicubic_scalar(u_with_coriolis, posx_d, posy_d, -0.5, -0.5);
-			//////////v_with_coriolis = sampler2D.bicubic_scalar(v_with_coriolis, posx_d, posy_d, -0.5, -0.5);
-
-			//////////PlaneData_Spectral h_dummy = h;
-
-			////////////Calculate phi_0 of interpolated U
-			//////////ts_phi0_rexi.run_timestep(
-			//////////		h, u_with_coriolis, v_with_coriolis,
-			//////////		h_dummy, u_with_coriolis, v_with_coriolis,
-			//////////		i_dt,
-			//////////		i_simulation_timestamp
-			//////////);
-
-		}
+		h = sampler2D.bicubic_scalar(h, posx_d, posy_d, -0.5, -0.5);
+		u = sampler2D.bicubic_scalar(u, posx_d, posy_d, -0.5, -0.5);
+		v = sampler2D.bicubic_scalar(v, posx_d, posy_d, -0.5, -0.5);
 
 
 		//Calculate phi_0 of interpolated U
@@ -321,286 +197,13 @@ void SWE_Plane_TS_l_rexi_na_sl_nd_etdrk::run_timestep(
 		h = phi0_Un_h;
 		u = phi0_Un_u;
 		v = phi0_Un_v;
-
-
-
-
 	}
-	////else
-	////{
-	////	SWEETError("TODO: This order is not implemented, yet!");
-	////}
-
-
-	// SL-ETD1RK-SETTLS
-	if ( timestepping_order == -1 )
+	else
 	{
-
-		/*
-		 * U_{1} = \phi_{0}( \Delta t L ) [
-		 * 			U_{0}_dep + \Delta t  (\phi_{1}(-\Delta tL) N(U_{0}))_dep.
-		 *
-		 *\phi_{1}(-\Delta tL)=psi_{1}(\Delta tL)
-		 *
-		 *F(U)=N(U)
-		 *
-		 */
-
-		// Calculate term to be interpolated: u+dt*psi_1(dt L)N(U_{0})
-		//Calculate N(U_{0})
-
-		if (!use_only_linear_divergence) //Full nonlinear case
-		{
-
-			euler_timestep_update_nonlinear(
-					h, u, v,
-					FUn_h, FUn_u, FUn_v,
-					i_simulation_timestamp
-			);
-
-
-			// Nonlinear term applied to previous time step
-			PlaneData_Spectral FUn_h_prev(planeDataConfig);
-			PlaneData_Spectral FUn_u_prev(planeDataConfig);
-			PlaneData_Spectral FUn_v_prev(planeDataConfig);
-			euler_timestep_update_nonlinear(
-					h_prev, u_prev, v_prev,
-					FUn_h_prev, FUn_u_prev, FUn_v_prev,
-					i_simulation_timestamp
-			);
-
-
-			//Apply psi_1 to N(U_{0})
-			ts_psi1_rexi.run_timestep(
-					2. * FUn_h - FUn_h_prev, 2. * FUn_u - FUn_u_prev, 2. * FUn_v - FUn_v_prev,
-					psi1_FUn_h, psi1_FUn_u, psi1_FUn_v,
-					i_dt,
-					i_simulation_timestamp
-			);
-
-
-			//Add this to U and interpolate to departure points
-			h = h + .5 * i_dt*psi1_FUn_h;
-			u = u + .5 * i_dt*psi1_FUn_u;
-			v = v + .5 * i_dt*psi1_FUn_v;
-		}
-
-
-		h = sampler2D.bi_interp_scalar(h, posx_d, posy_d, simVars.disc.semi_lagrangian_interpolation_order, -0.5, -0.5);
-		u = sampler2D.bi_interp_scalar(u, posx_d, posy_d, simVars.disc.semi_lagrangian_interpolation_order, -0.5, -0.5);
-		v = sampler2D.bi_interp_scalar(v, posx_d, posy_d, simVars.disc.semi_lagrangian_interpolation_order, -0.5, -0.5);
-
-		// Calculate psi1 of non interpolated nonlinear term
-		PlaneData_Spectral psi1_FUn_h_B(planeDataConfig);
-		PlaneData_Spectral psi1_FUn_u_B(planeDataConfig);
-		PlaneData_Spectral psi1_FUn_v_B(planeDataConfig);
-		ts_psi1_rexi.run_timestep(
-				FUn_h, FUn_u, FUn_v,
-				psi1_FUn_h_B, psi1_FUn_u_B, psi1_FUn_v_B,
-				i_dt,
-				i_simulation_timestamp
-		);
-
-                h = h + .5 * i_dt * psi1_FUn_h_B;
-                u = u + .5 * i_dt * psi1_FUn_u_B;
-                v = v + .5 * i_dt * psi1_FUn_v_B;
-
-		//Calculate phi_0 of interpolated U
-		PlaneData_Spectral phi0_Un_h(planeDataConfig);
-		PlaneData_Spectral phi0_Un_u(planeDataConfig);
-		PlaneData_Spectral phi0_Un_v(planeDataConfig);
-		ts_phi0_rexi.run_timestep(
-				h, u, v,
-				phi0_Un_h, phi0_Un_u, phi0_Un_v,
-				i_dt,
-				i_simulation_timestamp
-		);
-
-
-
-		h = phi0_Un_h;
-		u = phi0_Un_u;
-		v = phi0_Un_v;
-
+		SWEETError("TODO: This order is not implemented, yet!");
 	}
 
 
-	if ((timestepping_order == -2 || timestepping_order == -22) && !use_only_linear_divergence)
-	{
-
-		//Calculate order 1 SL-ETDRK (as above) : {U}_1^{n+1}
-		//-----------------------------------------------------
-		// Save SL-ETD1RK from above
-		PlaneData_Spectral h1(planeDataConfig);
-		PlaneData_Spectral u1(planeDataConfig);
-		PlaneData_Spectral v1(planeDataConfig);
-		h1 = h;
-		u1 = u;
-		v1 = v;
-
-		/////////////////////////////////Calculate order 1 SL-ETDRK (as above) : {U}_1^{n+1}
-		/////////////////////////////////-----------------------------------------------------
-		/////////////////////////////////Apply psi_1 to N(U_{0}) (could be stored from the previous if loop)
-		///////////////////////////////PlaneData_Spectral psi1_FUn_h(planeDataConfig);
-		///////////////////////////////PlaneData_Spectral psi1_FUn_u(planeDataConfig);
-		///////////////////////////////PlaneData_Spectral psi1_FUn_v(planeDataConfig);
-
-		///////////////////////////////ts_psi1_rexi.run_timestep(
-		///////////////////////////////		FUn_h, FUn_u, FUn_v,
-		///////////////////////////////		psi1_FUn_h, psi1_FUn_u, psi1_FUn_v,
-		///////////////////////////////		i_dt,
-		///////////////////////////////		i_simulation_timestamp
-		///////////////////////////////);
-
-		//Add half of this to (original) U and interpolate to departure points
-		h = io_h + .5 * i_dt*psi1_FUn_h;
-		u = io_u + .5 * i_dt*psi1_FUn_u;
-		v = io_v + .5 * i_dt*psi1_FUn_v;
-
-		//Interpolate (.5 * psi1NUn + U) to departure points ( )_*
-		//////////////////////////////PlaneData_Spectral Upsi1FUn_h_dep(planeDataConfig);
-		//////////////////////////////PlaneData_Spectral Upsi1FUn_u_dep(planeDataConfig);
-		//////////////////////////////PlaneData_Spectral Upsi1FUn_v_dep(planeDataConfig);
-		///Upsi1FUn_h_dep = sampler2D.bicubic_scalar(h, posx_d, posy_d, -0.5, -0.5);
-		///Upsi1FUn_u_dep = sampler2D.bicubic_scalar(u, posx_d, posy_d, -0.5, -0.5);
-		///Upsi1FUn_v_dep = sampler2D.bicubic_scalar(v, posx_d, posy_d, -0.5, -0.5);
-		Upsi1FUn_h_dep = sampler2D.bi_interp_scalar(h, posx_d, posy_d, simVars.disc.semi_lagrangian_interpolation_order,  -0.5, -0.5);
-		Upsi1FUn_u_dep = sampler2D.bi_interp_scalar(u, posx_d, posy_d, simVars.disc.semi_lagrangian_interpolation_order,  -0.5, -0.5);
-		Upsi1FUn_v_dep = sampler2D.bi_interp_scalar(v, posx_d, posy_d, simVars.disc.semi_lagrangian_interpolation_order,  -0.5, -0.5);
-
-		//Calculate psi1NU_1
-		//-----------------------
-
-		//NU_1
-		PlaneData_Spectral FU1_h(planeDataConfig);
-		PlaneData_Spectral FU1_u(planeDataConfig);
-		PlaneData_Spectral FU1_v(planeDataConfig);
-		euler_timestep_update_nonlinear(
-				h1, u1, v1,
-				FU1_h, FU1_u, FU1_v,
-				i_simulation_timestamp
-		);
-
-		//Apply psi1
-		PlaneData_Spectral psi1_FU1_h(planeDataConfig);
-		PlaneData_Spectral psi1_FU1_u(planeDataConfig);
-		PlaneData_Spectral psi1_FU1_v(planeDataConfig);
-		ts_psi1_rexi.run_timestep(
-				FU1_h, FU1_u, FU1_v,
-				psi1_FU1_h, psi1_FU1_u, psi1_FU1_v,
-				i_dt,
-				i_simulation_timestamp
-		);
-
-		//Add half of this to already interpolated values
-		h = Upsi1FUn_h_dep + .5 * i_dt * psi1_FU1_h;
-		u = Upsi1FUn_u_dep + .5 * i_dt * psi1_FU1_u;
-		v = Upsi1FUn_v_dep + .5 * i_dt * psi1_FU1_v;
-
-		//Calculate phi_0 of [interpolated (.5 * psi1NUN + U) + .5 * ps1NU1]
-		PlaneData_Spectral phi0_Un_h(planeDataConfig);
-		PlaneData_Spectral phi0_Un_u(planeDataConfig);
-		PlaneData_Spectral phi0_Un_v(planeDataConfig);
-		ts_phi0_rexi.run_timestep(
-				h, u, v,
-				phi0_Un_h, phi0_Un_u, phi0_Un_v,
-				i_dt,
-				i_simulation_timestamp
-		);
-
-		h = phi0_Un_h;
-		u = phi0_Un_u;
-		v = phi0_Un_v;
-
-	}
-
-	if ( timestepping_order == -22 && !use_only_linear_divergence)
-	{
-
-		//Calculate order SL-ETD1RK (as above) : {A}_1^{n+1}
-		//-----------------------------------------------------
-		// Save SL-ETD1RK from above
-		PlaneData_Spectral A_h1(planeDataConfig);
-		PlaneData_Spectral A_u1(planeDataConfig);
-		PlaneData_Spectral A_v1(planeDataConfig);
-		A_h1 = h;
-		A_u1 = u;
-		A_v1 = v;
-
-		//Calculate order 1 SL-ETDRK (as above) : {U}_1^{n+1}
-		//-----------------------------------------------------
-		//Apply psi_1 to N(U_{0}) (could be stored from the previous if loop)
-		///////////////////////////////PlaneData_Spectral psi1_FUn_h(planeDataConfig);
-		///////////////////////////////PlaneData_Spectral psi1_FUn_u(planeDataConfig);
-		///////////////////////////////PlaneData_Spectral psi1_FUn_v(planeDataConfig);
-
-		///////////////////////////////ts_psi1_rexi.run_timestep(
-		///////////////////////////////		FUn_h, FUn_u, FUn_v,
-		///////////////////////////////		psi1_FUn_h, psi1_FUn_u, psi1_FUn_v,
-		///////////////////////////////		i_dt,
-		///////////////////////////////		i_simulation_timestamp
-		///////////////////////////////);
-
-		/////////////////////////////////Add half of this to (original) U and interpolate to departure points
-		///////////////////////////////// Also could be stored from previous if loop
-		///////////////////////////////h = io_h + .5 * i_dt*psi1_FUn_h;
-		///////////////////////////////u = io_u + .5 * i_dt*psi1_FUn_u;
-		///////////////////////////////v = io_v + .5 * i_dt*psi1_FUn_v;
-
-		///////////////////////////////// Interpolate (.5 * psi1NUn + U) to departure points ( )_*
-		///////////////////////////////// Also could be stored from previous if loop
-		///////////////////////////////PlaneData_Spectral Upsi1FUn_h_dep(planeDataConfig);
-		///////////////////////////////PlaneData_Spectral Upsi1FUn_u_dep(planeDataConfig);
-		///////////////////////////////PlaneData_Spectral Upsi1FUn_v_dep(planeDataConfig);
-		///////////////////////////////Upsi1FUn_h_dep = sampler2D.bicubic_scalar(h, posx_d, posy_d, -0.5, -0.5);
-		///////////////////////////////Upsi1FUn_u_dep = sampler2D.bicubic_scalar(u, posx_d, posy_d, -0.5, -0.5);
-		///////////////////////////////Upsi1FUn_v_dep = sampler2D.bicubic_scalar(v, posx_d, posy_d, -0.5, -0.5);
-
-		//Calculate psi1NA_1
-		//-----------------------
-
-		//NU_1
-		PlaneData_Spectral FA1_h(planeDataConfig);
-		PlaneData_Spectral FA1_u(planeDataConfig);
-		PlaneData_Spectral FA1_v(planeDataConfig);
-		euler_timestep_update_nonlinear(
-				A_h1, A_u1, A_v1,
-				FA1_h, FA1_u, FA1_v,
-				i_simulation_timestamp
-		);
-
-		//Apply psi1
-		PlaneData_Spectral psi1_FA1_h(planeDataConfig);
-		PlaneData_Spectral psi1_FA1_u(planeDataConfig);
-		PlaneData_Spectral psi1_FA1_v(planeDataConfig);
-		ts_psi1_rexi.run_timestep(
-				FA1_h, FA1_u, FA1_v,
-				psi1_FA1_h, psi1_FA1_u, psi1_FA1_v,
-				i_dt,
-				i_simulation_timestamp
-		);
-
-		//Add half of this to already interpolated values
-		h = Upsi1FUn_h_dep + .5 * i_dt * psi1_FA1_h;
-		u = Upsi1FUn_u_dep + .5 * i_dt * psi1_FA1_u;
-		v = Upsi1FUn_v_dep + .5 * i_dt * psi1_FA1_v;
-
-		//Calculate phi_0 of [interpolated (.5 * psi1NUN + U) + .5 * ps1NU1]
-		PlaneData_Spectral phi0_Un_h(planeDataConfig);
-		PlaneData_Spectral phi0_Un_u(planeDataConfig);
-		PlaneData_Spectral phi0_Un_v(planeDataConfig);
-		ts_phi0_rexi.run_timestep(
-				h, u, v,
-				phi0_Un_h, phi0_Un_u, phi0_Un_v,
-				i_dt,
-				i_simulation_timestamp
-		);
-
-		h = phi0_Un_h;
-		u = phi0_Un_u;
-		v = phi0_Un_v;
-
-	}
 
 	//Aditional steps for SL-ETD2RK (it depends on SL-ETD1RK) - only for full nonlinear case
 	if (timestepping_order == 2 && !use_only_linear_divergence)
@@ -667,12 +270,9 @@ void SWE_Plane_TS_l_rexi_na_sl_nd_etdrk::run_timestep(
 		PlaneData_Spectral psi2FUn_h_dep(planeDataConfig);
 		PlaneData_Spectral psi2FUn_u_dep(planeDataConfig);
 		PlaneData_Spectral psi2FUn_v_dep(planeDataConfig);
-		//psi2FUn_h_dep = sampler2D.bicubic_scalar(psi2_FUn_h, posx_d, posy_d, -0.5, -0.5);
-		//psi2FUn_u_dep = sampler2D.bicubic_scalar(psi2_FUn_u, posx_d, posy_d, -0.5, -0.5);
-		//psi2FUn_v_dep = sampler2D.bicubic_scalar(psi2_FUn_v, posx_d, posy_d, -0.5, -0.5);
-		psi2FUn_h_dep = sampler2D.bi_interp_scalar(psi2_FUn_h, posx_d, posy_d, simVars.disc.semi_lagrangian_interpolation_order,  -0.5, -0.5);
-		psi2FUn_u_dep = sampler2D.bi_interp_scalar(psi2_FUn_u, posx_d, posy_d, simVars.disc.semi_lagrangian_interpolation_order,  -0.5, -0.5);
-		psi2FUn_v_dep = sampler2D.bi_interp_scalar(psi2_FUn_v, posx_d, posy_d, simVars.disc.semi_lagrangian_interpolation_order,  -0.5, -0.5);
+		psi2FUn_h_dep = sampler2D.bicubic_scalar(psi2_FUn_h, posx_d, posy_d, -0.5, -0.5);
+		psi2FUn_u_dep = sampler2D.bicubic_scalar(psi2_FUn_u, posx_d, posy_d, -0.5, -0.5);
+		psi2FUn_v_dep = sampler2D.bicubic_scalar(psi2_FUn_v, posx_d, posy_d, -0.5, -0.5);
 
 
 		//psi2NU_1-psi2NUn_dep
@@ -702,28 +302,6 @@ void SWE_Plane_TS_l_rexi_na_sl_nd_etdrk::run_timestep(
 
 	}
 
-	if ( simVars.disc.coriolis_treatment == "advection" )
-	{
-		////////////std::cout << " posy_d_phi0 " << fposy_d_phi0.toPhys().physical_reduce_min() << std::endl;
-		////////////std::cout << " posy_d " << fposy_d.toPhys().physical_reduce_min() << std::endl;
-		////////////std::cout << " posy_a " << fposy_a.toPhys().physical_reduce_min() << std::endl;
-		////////////std::cout << " posy_d_phi0 " << fposy_d_phi0.toPhys().physical_reduce_max() << std::endl;
-		////////////std::cout << " posy_d " << fposy_d.toPhys().physical_reduce_max() << std::endl;
-		////////////std::cout << " posy_a " << fposy_a.toPhys().physical_reduce_max() << std::endl;
-		////////////std::cout << " posy_d-posy_a " << (fposy_d.toPhys() - fposy_a.toPhys()).physical_reduce_max() << std::endl;
-		////////////std::cout << " posy_d_phi0-posy_a " << (fposy_d_phi0.toPhys() - fposy_a.toPhys()).physical_reduce_max() << std::endl;
-		////////////std::cout << " posy_d_phi0-posy_d " << (fposy_d_phi0.toPhys() - fposy_d.toPhys()).physical_reduce_max() << std::endl;
-		////////////std::cout << std::endl;
-		u = u + fposy_d_phi0 - fposy_a;
-		v = v + fposx_d_phi0 - fposx_a;
-
-		/////////PlaneData_Physical u_phys = u.toPhys();
-		/////////PlaneData_Physical v_phys = v.toPhys();
-		/////////u_phys = u_phys + fposy_d_phi0.toPhys() - fposy_a.toPhys();
-		/////////v_phys = v_phys + fposx_d_phi0.toPhys() - fposx_a.toPhys();
-		/////////u.loadPlaneDataPhysical(u_phys);
-		/////////v.loadPlaneDataPhysical(v_phys);
-	}
 
 
 	// Save current time step for next step
@@ -734,6 +312,7 @@ void SWE_Plane_TS_l_rexi_na_sl_nd_etdrk::run_timestep(
 	io_h = h;
 	io_u = u;
 	io_v = v;
+
 
 }
 
@@ -752,7 +331,7 @@ void SWE_Plane_TS_l_rexi_na_sl_nd_etdrk::setup(
 
 	ts_phi0_rexi.setup(simVars.rexi, "phi0", simVars.timecontrol.current_timestep_size);
 
-	if ((timestepping_order == 1 || timestepping_order == -1 || timestepping_order == -2 || timestepping_order == -22) && !use_only_linear_divergence)
+	if (timestepping_order == 1 && !use_only_linear_divergence)
 	{
 		ts_phi1_rexi.setup(simVars.rexi, "phi1", simVars.timecontrol.current_timestep_size);
 		ts_psi1_rexi.setup(simVars.rexi, "psi1", simVars.timecontrol.current_timestep_size);

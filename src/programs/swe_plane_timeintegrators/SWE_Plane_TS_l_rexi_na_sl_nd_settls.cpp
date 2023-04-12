@@ -52,12 +52,14 @@ void SWE_Plane_TS_l_rexi_na_sl_nd_settls::run_timestep(
 
 	if (i_simulation_timestamp == 0)
 	{
+#if (!SWEET_PARAREAL) && (!SWEET_XBRAID)
 		/*
 		 * First time step
 		 */
 		h_prev = io_h;
 		u_prev = io_u;
 		v_prev = io_v;
+#endif
 	}
 
 	//Preserve io unmodified
@@ -134,12 +136,9 @@ void SWE_Plane_TS_l_rexi_na_sl_nd_settls::run_timestep(
 	}
 
 	// Interpolate W to departure points
-	///h = sampler2D.bicubic_scalar(h, posx_d, posy_d, -0.5, -0.5);
-	///u = sampler2D.bicubic_scalar(u, posx_d, posy_d, -0.5, -0.5);
-	///v = sampler2D.bicubic_scalar(v, posx_d, posy_d, -0.5, -0.5);
-	h = sampler2D.bi_interp_scalar(h, posx_d, posy_d, simVars.disc.semi_lagrangian_interpolation_order, -0.5, -0.5);
-	u = sampler2D.bi_interp_scalar(u, posx_d, posy_d, simVars.disc.semi_lagrangian_interpolation_order, -0.5, -0.5);
-	v = sampler2D.bi_interp_scalar(v, posx_d, posy_d, simVars.disc.semi_lagrangian_interpolation_order, -0.5, -0.5);
+	h = sampler2D.bicubic_scalar(h, posx_d, posy_d, -0.5, -0.5);
+	u = sampler2D.bicubic_scalar(u, posx_d, posy_d, -0.5, -0.5);
+	v = sampler2D.bicubic_scalar(v, posx_d, posy_d, -0.5, -0.5);
 
 
 	// Add nonlinearity in h

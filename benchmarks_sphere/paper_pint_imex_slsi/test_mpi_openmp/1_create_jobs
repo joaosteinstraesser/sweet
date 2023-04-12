@@ -1,0 +1,14 @@
+#!/bin/bash
+
+ref_dir="fine_sim"
+
+## create ref job
+if [ ! -d "$ref_dir" ]; then
+	mkdir $ref_dir
+fi
+cd $ref_dir
+../benchmarks_create.py ref
+
+## create xbraid jobs with 1, 2, 4 mpi ranks
+cd ../
+./benchmarks_create.py xbraid

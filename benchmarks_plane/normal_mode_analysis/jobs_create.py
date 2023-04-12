@@ -5,7 +5,7 @@ import sys
 import stat
 import math
 
-from SWEET import *
+from mule import *
 p = JobGeneration()
 
 #
@@ -20,7 +20,7 @@ p.compile.sphere_spectral_space = 'disable'
 p.compile.sphere_spectral_dealiasing = 'disable'
 
 
-p.compile.compiler = 'gnu'
+p.compile.compiler = 'gcc'
 
 
 

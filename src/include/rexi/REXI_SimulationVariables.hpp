@@ -136,7 +136,6 @@ struct EXP_SimulationVariables
 	int exp_direct_precompute_phin = 0;
 
 
-
 public:
 	class REXIFile
 	{

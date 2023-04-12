@@ -33,6 +33,7 @@ public:
 
 		return
 			i_benchmark_name == "galewsky" ||			///< Standard Galewsky benchmark
+			i_benchmark_name == "galewsky_linearbalance" ||	///< Standard Galewsky benchmark with linear balanced initial conditions
 			i_benchmark_name == "galewsky_nobump" ||	///< Galewsky benchmark without bumps
 			i_benchmark_name == "galewsky_nosetparams"	///< Galewsky benchmark without overriding parameters
 		;
@@ -64,11 +65,32 @@ public:
 		SphereData_Spectral &o_div
 	)
 	{
+
+
+		///double t_hotstart = 414720;
+
+
 		SWESphereBenchmarks_helpers helpers(simVars, ops);
 		const SphereData_Config *sphereDataConfig = o_phi_pert.sphereDataConfig;
 
-		if (benchmark_name != "galewsky_nosetparams")
+		// Search for substrings
+		bool benchmark_nosetparams = benchmark_name.find("nosetparams") != std::string::npos;
+		bool benchmark_nobump = benchmark_name.find("nobump") != std::string::npos;
+		bool benchmark_linearbalance = benchmark_name.find("linearbalance") != std::string::npos;
+
+		// Use analytical geostrophic setup by default
+		bool use_analytical_geostrophic_setup = true;
+
+		if (simVars->misc.comma_separated_tags.find("galewsky_numerical_geostrophic_setup") != std::string::npos)
+			use_analytical_geostrophic_setup = false;
+
+		if (simVars->misc.comma_separated_tags.find("galewsky_analytical_geostrophic_setup") != std::string::npos)
+			use_analytical_geostrophic_setup = true;
+
+
+		if (!benchmark_nosetparams)
 		{
+			///if (simVars->timecontrol.current_simulation_time == t_hotstart)
 			if (simVars->timecontrol.current_simulation_time == 0)
 			{
 				std::cout << "!!! WARNING !!!" << std::endl;
@@ -149,16 +171,28 @@ public:
 
 		ops->uv_to_vrtdiv(ug, vg, o_vrt, o_div);
 
-		bool use_analytical_geostrophic_setup = simVars->misc.comma_separated_tags.find("galewsky_analytical_geostrophic_setup") != std::string::npos;
-
 		if (use_analytical_geostrophic_setup)
 		{
 			std::cout << "[MULE] use_analytical_geostrophic_setup: 1" << std::endl;
-			helpers.computeGeostrophicBalance_nonlinear(
-					o_vrt,
-					o_div,
-					o_phi_pert
-			);
+
+			if (!benchmark_linearbalance)
+			{
+				// use nonlinear balanced initial conditions
+				helpers.computeGeostrophicBalance_nonlinear(
+						o_vrt,
+						o_div,
+						o_phi_pert
+				);
+			}
+			else
+			{
+				// use linearly balanced initial conditions
+				helpers.computeGeostrophicBalance_linear(
+						o_vrt,
+						o_div,
+						o_phi_pert
+				);
+			}
 
 			double h0_ = 10e3;
 			o_phi_pert = simVars->sim.gravitation * h0_ + o_phi_pert;
@@ -166,6 +200,11 @@ public:
 		}
 		else
 		{
+			if (benchmark_linearbalance)
+			{
+				SWEETError("Not supported");
+			}
+
 			std::cout << "[MULE] use_analytical_geostrophic_setup: 0" << std::endl;
 
 			/*
@@ -327,7 +366,7 @@ public:
 		simVars->sim.h0 = 10000;
 
 		SphereData_Physical hbump(o_phi_pert.sphereDataConfig);
-		if (benchmark_name == "galewsky")
+		if (!benchmark_nobump)
 		{
 			hbump.physical_update_lambda(
 				[&](double lon, double phi, double &o_data)
@@ -337,6 +376,39 @@ public:
 			);
 			o_phi_pert += hbump*simVars->sim.gravitation;
 		}
+
+
+
+		//////////if (t_hotstart > 0)
+		//////////{
+		//////////	// hotstart
+		//////////	char buffer_phi_pert[1024];
+		//////////	std::string i_name = "prog_phi_pert";
+		//////////	double t = t_hotstart;
+		//////////	const char* filename_template = simVars->iodata.output_file_name_bin.c_str();
+		//////////	sprintf(buffer_phi_pert, filename_template, i_name.c_str(), t * simVars->iodata.output_time_scale);
+		//////////	std::string buffer2 = "../job_bench_full_simulation/" + std::string(buffer_phi_pert);
+		//////////	o_phi_pert.file_read_binary_spectral(buffer2);
+
+		//////////	char buffer_vrt[1024];
+		//////////	i_name = "prog_vrt";
+		//////////	sprintf(buffer_vrt, filename_template, i_name.c_str(), t * simVars->iodata.output_time_scale);
+		//////////	buffer2 =  "../job_bench_full_simulation/" + std::string(buffer_vrt);
+		//////////	o_vrt.file_read_binary_spectral(buffer2);
+
+		//////////	char buffer_div[1024];
+		//////////	i_name = "prog_div";
+		//////////	sprintf(buffer_div, filename_template, i_name.c_str(), t * simVars->iodata.output_time_scale);
+		//////////	buffer2 =  "../job_bench_full_simulation/" + std::string(buffer_div);
+		//////////	o_div.file_read_binary_spectral(buffer2);
+		//////////}
+
+
+
+
+
+
+
 
 
 		std::cout << "phi min: " << o_phi_pert.toPhys().physical_reduce_min() << std::endl;

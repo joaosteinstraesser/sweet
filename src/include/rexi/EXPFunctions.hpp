@@ -6,10 +6,19 @@
 #define SRC_INCLUDE_EXPFUNCTIONS_HPP_
 
 #include <iostream>
+#include <complex>
 #include <typeinfo>
 #include <libmath/DQStuff.hpp>
 
+#define EXP_FUNCTIONS_MAX_ITERS_DEFAULT 20
 
+/*
+ * 0: Series
+ * 1: Cauchy
+ */
+#define EXP_FUNCTIONS_PHI_SPECIAL_EVAL_TYPE	0
+
+#define EXP_FUNCTIONS_PHI_SPECIAL_THRESHOLD	1
 
 /**
  * This class implements various EXP functions.
@@ -19,6 +28,8 @@
 template <typename T = double>
 class EXPFunctions
 {
+	typedef std::complex<T> CT;
+
 	enum fun_id_enum
 	{
 		INVALID,
@@ -36,17 +47,10 @@ class EXPFunctions
 
 		PSI1,
 		PSI2,
-		PSI3,
-
-		CHI1
+		PSI3
 	};
 
 	fun_id_enum function_id;
-
-	/**************************************************
-	* Number of subintegrals
-	*/
-	int nb_subintegrals = 1;
 
 
 public:
@@ -100,8 +104,7 @@ public:
 
 public:
 	void setup(
-			const std::string &i_function_name,
-			int i_nb_subintegrals = 1
+			const std::string &i_function_name
 	)
 	{
 		if (i_function_name  == "phi0")
@@ -124,7 +127,10 @@ public:
 		else if (i_function_name  == "ups3")
 			function_id = UPS3;
 
-		// Semi-Lag phi functions (phi0 factored out) - see sl-rexi paper
+		/*
+		 * Semi-Lag phi functions (phi0 factored out) - see sl-rexi paper
+		 * This is not the psi from some of Martin's presentation slides!
+		 */
 		else if (i_function_name  == "psi1")
 			function_id = PSI1;
 		else if (i_function_name  == "psi2")
@@ -132,13 +138,12 @@ public:
 		else if (i_function_name  == "psi3")
 			function_id = PSI3;
 
-		else if (i_function_name  == "chi1")
-			function_id = CHI1;
-
 		else
-			SWEETError("This phi function is not supported! : ");
-
-		nb_subintegrals = i_nb_subintegrals;
+		{
+			std::ostringstream ss;
+			ss << "The function '" << i_function_name << "' is not supported!";
+			SWEETError(ss.str().c_str());
+		}
 	}
 
 
@@ -237,25 +242,24 @@ public:
 	 */
 	std::complex<T> phiNSeries(
 		int n,
-		const std::complex<T> &z
+		const std::complex<T> &K,
+		int max_iters = EXP_FUNCTIONS_MAX_ITERS_DEFAULT
 	)
 	{
-		std::complex<T> powz = 1.0;
+		std::complex<T> pow_K = 1;
 		T facn = factorial(n);
+		std::complex<T> retval = pow_K/facn;
 
-		std::complex<T> retval = powz/facn;
-
-		for (int i = 1; i < 20; i++)
+		for (int i = 1; i < max_iters; i++)
 		{
-			powz *= z;
+			pow_K *= K;
 			facn *= (n+i);
 
-			retval += powz/facn;
+			retval += pow_K/facn;
 		}
 
 		return retval;
 	}
-
 
 
 	/*
@@ -263,12 +267,12 @@ public:
 	 */
 	std::complex<T> phiN(
 			int N,
-			const std::complex<T> &z
+			const std::complex<T> &z,
+			int max_iters = EXP_FUNCTIONS_MAX_ITERS_DEFAULT
 	)
 	{
-		T linf = z.real()*z.real() + z.imag()*z.imag();
-        if (linf < 0.2)
-			return phiNSeries(N, z);
+        if (std::abs(z) < EXP_FUNCTIONS_PHI_SPECIAL_THRESHOLD)
+			return phiNSeries(N, z, max_iters);
 
         return phiNRec(N, z);
 	}
@@ -299,65 +303,80 @@ public:
 		return 0;
 	}
 
+	std::complex<T> ups1Series(
+			const std::complex<T> &K,
+			int max_iters = EXP_FUNCTIONS_MAX_ITERS_DEFAULT
+    )
+	{
+		std::complex<T> pow_K = 1;
+		T fac_denom = 6;	//factorial(3);
+		std::complex<T> retval = pow_K/fac_denom;
+
+		for (int l = 1; l < max_iters; l++)
+		{
+			pow_K *= K;
+			fac_denom *= (l+3);
+			retval += pow_K*(l+1.0)*(l+1.0)/fac_denom;
+		}
+		return retval;
+	}
+
+	std::complex<T> ups2Series(
+			const std::complex<T> &K,
+			int max_iters = EXP_FUNCTIONS_MAX_ITERS_DEFAULT
+    )
+	{
+		std::complex<T> pow_K = 1;
+		T facn = 6;//factorial(3);
+		std::complex<T> retval = 1.0/2.0;
+
+		retval += (K-2.0)*pow_K/facn;
+
+		for (int l = 1; l < max_iters; l++)
+		{
+			pow_K *= K;
+			facn *= (l+3);
+			retval += (K-2.0)*pow_K/facn;
+		}
+		return retval;
+	}
+
+	std::complex<T> ups3Series(
+			const std::complex<T> &K,
+			int max_iters = EXP_FUNCTIONS_MAX_ITERS_DEFAULT
+    )
+	{
+		std::complex<T> pow_K = 1;
+		T facn = 6;//factorial(3);
+		std::complex<T> retval = -1.0/2.0;
+
+		retval += (4.0-K)*pow_K/facn;
+
+		for (int l = 1; l < max_iters; l++)
+		{
+		    pow_K *= K;
+		    facn *= (l+3);
+		    retval += (4.0-K)*pow_K/facn;
+		}
+		return retval;
+	}
 
 	std::complex<T> upsNSeries(
 			int n,
-			const std::complex<T> &z
+			const std::complex<T> &z,
+			int max_iters = EXP_FUNCTIONS_MAX_ITERS_DEFAULT
     )
 	{
-		std::complex<T> powz;
-		T facn;
-
-		std::complex<T> retval;
-
-		int niters = 20;
-
 		switch(n)
 		{
 		case 1:
-			powz = 1.0;
-			facn = factorial(3);
-
-			retval = powz/facn;
-			for (int l = 1; l < niters; l++)
-			{
-		        powz *= z;
-		        facn *= (l+3);
-		        retval += powz*(l+1.0)*(l+1.0)/facn;
-			}
-			return retval;
+			return ups1Series(z, max_iters);
 
 		case 2:
-			    retval = 1.0/2.0;
-
-			    powz = 1.0;
-			    facn = factorial(3);
-
-			    retval += (z-2.0)*powz/facn;
-			for (int l = 1; l < niters; l++)
-			{
-				powz *= z;
-				facn *= (l+3);
-				retval += (z-2.0)*powz/facn;
-			}
-
-			return retval;
+			return ups2Series(z, max_iters);
 
 		case 3:
-		    retval = -1.0/2.0;
-
-		    powz = 1.0;
-		    facn = factorial(3);
-
-		    retval += (4.0-z)*powz/facn;
-		    for (int l = 1; l < niters; l++)
-		    {
-			    powz *= z;
-			    facn *= (l+3);
-			    retval += (4.0-z)*powz/facn;
-		    }
-
-		    return retval;
+			return ups3Series(z, max_iters);
 		}
 
 		SWEETError("This Upsilon function is not supported!");
@@ -370,12 +389,13 @@ public:
 	 */
 	std::complex<T> upsN(
 			int N,
-			const std::complex<T> &z
+			const std::complex<T> &z,
+			int max_iters = EXP_FUNCTIONS_MAX_ITERS_DEFAULT
 	)
 	{
 		T linf = z.real()*z.real() + z.imag()*z.imag();
-		if (linf < 0.2)
-			return upsNSeries(N, z);
+		if (linf < EXP_FUNCTIONS_PHI_SPECIAL_THRESHOLD)
+			return upsNSeries(N, z, max_iters);
 
 		return upsNDirect(N, z);
 	}
@@ -391,51 +411,21 @@ public:
 			const std::complex<T> &i_K
 	)
 	{
-		// for tests of numerical instability
-//		T lamdt = i_K.real()*i_K.real() + i_K.imag()*i_K.imag();
-
 		switch(n)
 		{
-		case 1:	// psi1
-#if 1
+		case 1:	// SL psi1
 			// psi1(z) = phi1(-z)
 			return phiN(1, -i_K);
-#else
-			//
-			if (lamdt < eps_phi)
-			{
-				return 1.0;
-			}
-			else
-			{
-				//psi1(z)=phi(-z)
-				return (l_expcplx(i_K) - std::complex<T>(1.0))/i_K;
-			}
-#endif
 			break;
 
 
-		case 2:	// psi2
-#if 1
+		case 2:	// SL psi2
 			// psi2(z)=-phi2(-z)+phi1(-z)
 			return -phiN(2, -i_K) + phiN(1, -i_K);
-#else
-			if (lamdt < eps_phi)
-				//					if (lamdt*lamdt < expFunctions.eps_phi)
-			{
-				return 1.0/2.0;
-			}
-			else
-			{
-				//psi2(z)=-phi2(-z)+phi1(-z)
-				return -(l_expcplx(i_K) - std::complex<T>(1.0) - i_K)/(i_K*i_K)
-								+(l_expcplx(i_K) - std::complex<T>(1.0))/i_K;
-			}
-#endif
 			break;
 
 
-		case 3:	// psi3
+		case 3:	// SL psi3
 #if 1
 			SWEETError("TODO: Redo this with e.g. series treatment");
 #else
@@ -460,86 +450,6 @@ public:
 
 		return -1;
 	}
-
-
-
-	/*
-	 * \chi_N: Series-based computation
-	 *
-	 * This avoids the singularity close to 0
-	 */
-	std::complex<T> chiNSeries(
-		int n,
-		const std::complex<T> &z
-	)
-	{
-
-		double p = (double)nb_subintegrals;
-
-		std::complex<T> powz = 1.0;
-		double powp = 1.0;
-		T facn = factorial(n);
-
-		std::complex<T> retval = powz/facn;
-
-		for (int i = 1; i < 20; i++)
-		{
-			powz *= z;
-			powp *= (p - 1.) / p;
-			facn *= (n+i);
-
-			retval += powz/facn * (1. - powp);
-		}
-
-		return retval;
-	}
-
-
-	/*
-	 * Semi-Lagrangian chi functions
-	 */
-	std::complex<T> chiN(
-			int n,
-			const std::complex<T> &i_K
-	)
-	{
-
-		int p = nb_subintegrals;
-
-		// for tests of numerical instability
-//		T lamdt = i_K.real()*i_K.real() + i_K.imag()*i_K.imag();
-
-		switch(n)
-		{
-		case 1:	// chi1
-		{
-			T linf = i_K.real()*i_K.real() + i_K.imag()*i_K.imag();
-			if (linf < 0.2)
-				return chiNSeries(n, i_K);
-			else
-				return (T)1.0 / i_K * ( l_expcplx(i_K) - l_expcplx( ( (T)1. - (T)1.0 / (T)p ) * i_K) );
-			break;
-		}
-
-		case 2:	// psi2
-			break;
-
-		default:
-			SWEETError("This chi number is not yet supported");
-		}
-
-		return -1;
-	}
-
-
-
-
-
-
-
-
-
-
 
 
 	/**
@@ -592,9 +502,6 @@ public:
 
 		case PSI3:
 			return psiN(3, i_K);
-
-		case CHI1:
-			return chiN(1, i_K);
 
 		default:
 			SWEETError("This phi is not yet supported");

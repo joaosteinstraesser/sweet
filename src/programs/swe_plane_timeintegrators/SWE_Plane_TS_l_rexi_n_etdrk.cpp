@@ -127,76 +127,6 @@ void SWE_Plane_TS_l_rexi_n_etdrk::run_timestep(
 		io_u = phi0_Un_u + i_dt*phi1_FUn_u;
 		io_v = phi0_Un_v + i_dt*phi1_FUn_v;
 	}
-	else if (timestepping_order == -2)
-	{
-
-		// Compute phi0 U_n
-		PlaneData_Spectral phi0_Un_h(planeDataConfig);
-		PlaneData_Spectral phi0_Un_u(planeDataConfig);
-		PlaneData_Spectral phi0_Un_v(planeDataConfig);
-		ts_phi0_rexi.run_timestep(
-				io_h, io_u, io_v,
-				phi0_Un_h, phi0_Un_u, phi0_Un_v,
-				i_dt,
-				i_simulation_timestamp
-			);
-
-		PlaneData_Spectral FUn_h(planeDataConfig);
-		PlaneData_Spectral FUn_u(planeDataConfig);
-		PlaneData_Spectral FUn_v(planeDataConfig);
-		euler_timestep_update_nonlinear(
-				io_h, io_u, io_v,
-				FUn_h, FUn_u, FUn_v,
-				i_simulation_timestamp
-		);
-
-                // Compute phi1 F(U_n)
-		PlaneData_Spectral phi1_FUn_h(planeDataConfig);
-		PlaneData_Spectral phi1_FUn_u(planeDataConfig);
-		PlaneData_Spectral phi1_FUn_v(planeDataConfig);
-
-		ts_phi1_rexi.run_timestep(
-				FUn_h, FUn_u, FUn_v,
-				phi1_FUn_h, phi1_FUn_u, phi1_FUn_v,
-				i_dt,
-				i_simulation_timestamp
-			);
-
-                // Compute A = U_{ETD1}
-		PlaneData_Spectral A_h = phi0_Un_h + i_dt*phi1_FUn_h;
-		PlaneData_Spectral A_u = phi0_Un_u + i_dt*phi1_FUn_u;
-		PlaneData_Spectral A_v = phi0_Un_v + i_dt*phi1_FUn_v;
-
-		// Compute F(A)
-		PlaneData_Spectral FAn_h(planeDataConfig);
-		PlaneData_Spectral FAn_u(planeDataConfig);
-		PlaneData_Spectral FAn_v(planeDataConfig);
-
-		euler_timestep_update_nonlinear(
-				A_h, A_u, A_v,
-				FAn_h, FAn_u, FAn_v,
-				i_simulation_timestamp
-		);
-
-		// Compute phi1 .5 * (F(U_n) + F(A))
-		PlaneData_Spectral phi1_FU2n_h(planeDataConfig);
-		PlaneData_Spectral phi1_FU2n_u(planeDataConfig);
-		PlaneData_Spectral phi1_FU2n_v(planeDataConfig);
-
-		ts_phi1_rexi.run_timestep(
-				.5 * (FUn_h + FAn_h), .5 * (FUn_u + FAn_u), .5 * (FUn_v + FAn_v),
-				phi1_FU2n_h, phi1_FU2n_u, phi1_FU2n_v,
-				i_dt,
-				i_simulation_timestamp
-			);
-
-
-		// Compute final result
-		io_h = phi0_Un_h + i_dt*phi1_FU2n_h;
-		io_u = phi0_Un_u + i_dt*phi1_FU2n_u;
-		io_v = phi0_Un_v + i_dt*phi1_FU2n_v;
-
-	}
 	else if (timestepping_order == 2)
 	{
 
@@ -487,7 +417,7 @@ void SWE_Plane_TS_l_rexi_n_etdrk::setup(
 	timestepping_order = i_timestepping_order;
 	use_only_linear_divergence = i_use_only_linear_divergence;
 
-	if (timestepping_order == 1 || timestepping_order == -2)
+	if (timestepping_order == 1)
 	{
 		ts_phi0_rexi.setup(i_rexiSimVars, "phi0", simVars.timecontrol.current_timestep_size);
 		ts_phi1_rexi.setup(i_rexiSimVars, "phi1", simVars.timecontrol.current_timestep_size);

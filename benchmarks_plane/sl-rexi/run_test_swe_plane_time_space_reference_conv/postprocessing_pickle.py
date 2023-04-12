@@ -4,7 +4,7 @@ import sys
 import math
 import glob
 
-from mule_local.postprocessing.pickle_SphereDataPhysicalDiff import *
-from mule.exec_program import *
+from mule.postprocessing.pickle_SphereDataPhysicalDiff  # TODO : correct import import *
+from mule.utils import exec_program
 
 pickle_SphereDataPhysicalDiff()

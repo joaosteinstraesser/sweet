@@ -136,7 +136,7 @@ class JobGeneration(InfoError):
 
 
 
-    def setup_parallelization(self, parallelization_dim_list):
+    def setup_parallelization(self, parallelization_dim_list, **kwargs):
         """
         Setup the parallelization configuration
 
@@ -146,7 +146,7 @@ class JobGeneration(InfoError):
             list with JobParallelizationDimOptions with parallelization
             print_information along each dimension
         """
-        self.parallelization.setup(parallelization_dim_list, self.platform_resources)
+        self.parallelization.setup(parallelization_dim_list, self.platform_resources, **kwargs)
 
 
 
@@ -403,7 +403,7 @@ source ./local_software/env_vars.sh \""""+os.path.normpath(self.platforms.platfo
 
         # Determine output files
         self.p_job_stdout_filepath = self.p_job_dirpath+"/output.out"
-        self.p_job_stderr_filepath = self.p_job_dirpath+"/output.out"
+        self.p_job_stderr_filepath = self.p_job_dirpath+"/output.err"
 
         # Generate full unfiltered unique ID
         self.job_unique_id = self.getUniqueID([])

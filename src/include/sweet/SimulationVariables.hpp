@@ -29,6 +29,7 @@
 
 #if SWEET_USE_SPHERE_SPECTRAL_SPACE
 #	include <sweet/sphere/SphereData_Spectral.hpp>
+#	include <sweet/sphere/SphereData_Physical.hpp>
 #endif
 
 #ifndef SWEET_PARAREAL
@@ -43,12 +44,20 @@
 #	define SWEET_LIBPFASST 1
 #endif
 
+#ifndef SWEET_XBRAID
+#	define SWEET_XVRAID 1
+#endif
+
 #if SWEET_PARAREAL
 #	include <parareal/Parareal_SimulationVariables.hpp>
 #endif
 
 #if SWEET_LIBPFASST
 #       include <libpfasst/LibPFASST_SimulationVariables.hpp>
+#endif
+
+#if SWEET_XBRAID
+#       include <xbraid/XBraid_SimulationVariables.hpp>
 #endif
 
 
@@ -81,6 +90,11 @@ public:
 #if SWEET_LIBPFASST
 	LibPFASST_SimulationVariables libpfasst;
 #endif
+
+#if SWEET_XBRAID
+	XBraid_SimulationVariables xbraid;
+#endif
+
 
 public:
 	EXP_SimulationVariables rexi;
@@ -152,6 +166,7 @@ public:
 
 		/// prefix of filename for outputConfig of data
 		std::string output_file_name = "X";
+		std::string output_file_name_bin = "X";
 
 		/// output mode of variables
 		std::string output_file_mode = "default";
@@ -687,23 +702,6 @@ public:
 		/// Order of 2nd time stepping which might be used
 		int timestepping_order2 = -1;
 
-		// Interpolation order in SL
-		int semi_lagrangian_interpolation_order = 3;
-
-		// Treatment of coriolis term (linear, nonlinear or advection)
-		std::string coriolis_treatment = "linear";
-
-		////// Plane coriolis not included in linear term
-		////bool plane_linear_term_no_coriolis = false;
-
-		////// Coriolis term treated in 
-		////bool plane_linear_term_no_coriolis = false;
-
-		// DEBUG: do not consider influence of geostrophic modes
-		bool zero_geostrophic_modes = false;
-
-		// DEBUG: do not consider influence of gravity-wave modes
-		bool zero_gravity_modes = false;
 
 
 		void outputConfig()
@@ -725,11 +723,6 @@ public:
 			std::cout << " + semi_lagrangian_sampler_use_pole_pseudo_points: " << semi_lagrangian_sampler_use_pole_pseudo_points << std::endl;
 			std::cout << " + semi_lagrangian_convergence_threshold: " << semi_lagrangian_convergence_threshold << std::endl;
 			std::cout << " + semi_lagrangian_approximate_sphere_geometry: " << semi_lagrangian_approximate_sphere_geometry << std::endl;
-			std::cout << " + semi_lagrangian_interpolation_order: " << semi_lagrangian_interpolation_order << std::endl;
-			//std::cout << " + plane_term_no_coriolis: " << plane_linear_term_no_coriolis << std::endl;
-			std::cout << " + coriolis_treatment: " << coriolis_treatment << std::endl;
-			std::cout << " + zero_geostrophic_modes: " << zero_geostrophic_modes << std::endl;
-			std::cout << " + zero_gravity_modes: " << zero_gravity_modes << std::endl;
 			std::cout << " + plane_dealiasing (compile time): " <<
 #if SWEET_USE_PLANE_SPECTRAL_DEALIASING
 			1
@@ -776,11 +769,6 @@ public:
 			std::cout << "	--semi-lagrangian-interpolation-limiter [bool]	Use limiter for cubic interpolation" << std::endl;
 			std::cout << "	--semi-lagrangian-convergence-threshold [float]	Threshold to stop iterating, Use -1 to disable" << std::endl;
 			std::cout << "	--semi-lagrangian-approximate-sphere-geometry [int]	0: no approximation, 1: Richies approximation, default: 0" << std::endl;
-			std::cout << "	--semi-lagrangian-interpolation-order [int]	default: 3" << std::endl;
-			///std::cout << "	--plane-linear-term-no-coriolis [0;1]	0: coriolis inclued in linear term, 1: not included, default: 0" << std::endl;
-			std::cout << "	--coriolis-treatment [string]	0: linear, nonlinear or advection, default: linear" << std::endl;
-			std::cout << "	--zero-geostrophic-modes [0;1]	0: consider geostrophic modes, 1: ignore influence of geostrophic modes, default: 0" << std::endl;
-			std::cout << "	--zero-gravity-modes [0;1]	0: consider gravity-waves modes, 1: ignore influence of gravity-waves modes, default: 0" << std::endl;
 
 		}
 
@@ -827,21 +815,6 @@ public:
 	        next_free_program_option++;
 
 	        long_options[next_free_program_option] = {"space-grid-use-c-staggering", required_argument, 0, 256+next_free_program_option};
-	        next_free_program_option++;
-
-	        long_options[next_free_program_option] = {"semi-lagrangian-interpolation-order", required_argument, 0, 256+next_free_program_option};
-	        next_free_program_option++;
-
-	        //long_options[next_free_program_option] = {"plane-linear-term-no-coriolis", required_argument, 0, 256+next_free_program_option};
-	        //next_free_program_option++;
-
-	        long_options[next_free_program_option] = {"coriolis-treatment", required_argument, 0, 256+next_free_program_option};
-	        next_free_program_option++;
-
-	        long_options[next_free_program_option] = {"zero-geostrophic-modes", required_argument, 0, 256+next_free_program_option};
-	        next_free_program_option++;
-
-	        long_options[next_free_program_option] = {"zero-gravity-modes", required_argument, 0, 256+next_free_program_option};
 	        next_free_program_option++;
 		}
 
@@ -908,29 +881,9 @@ public:
 			case 11:
 				space_grid_use_c_staggering = atof(i_value);
 				return -1;
-
-			case 12:
-				semi_lagrangian_interpolation_order = atoi(i_value);
-				return -1;
-
-			//case 12:
-			//	plane_linear_term_no_coriolis = atoi(i_value);
-			//	return -1;
-
-			case 13:
-				coriolis_treatment = i_value;
-				return -1;
-
-			case 14:
-				zero_geostrophic_modes = atof(i_value);
-				return -1;
-
-			case 15:
-				zero_gravity_modes = atof(i_value);
-				return -1;
 			}
 
-			return 16;
+			return 12;
 		}
 	} disc;
 
@@ -1169,25 +1122,26 @@ public:
 		/// This is beneficial to pause simulations if driven interactively.
 		bool run_simulation_timesteps = true;
 
-		/// number of simulated time steps
+		/// Number of simulated time steps
 		int current_timestep_nr = 0;
 
-		/// time step size used during setup
+		/// Time step size used during setup
 		double setup_timestep_size = -1;
 
-		/// current time step size
+		/// Current time step size
 		double current_timestep_size = -1;
 
-		/// time in simulation
+		/// Time in simulation
 		double current_simulation_time = 0;
+		///////////////double current_simulation_time = 414720;
 
-		/// maximum number of time steps to simulate
+		/// Maximum number of time steps to simulate
 		int max_timesteps_nr = std::numeric_limits<int>::max();
 
-		/// maximum simulation time to execute the simulation for
+		/// Maximum simulation time to execute the simulation for
 		double max_simulation_time = std::numeric_limits<double>::infinity();
 
-		/// maximum wallclock time to execute the simulation for
+		/// Maximum wallclock time to execute the simulation for
 		double max_wallclock_time = -1;
 
 
@@ -1272,6 +1226,11 @@ public:
 #if SWEET_LIBPFASST
 		libpfasst.outputConfig();
 #endif
+
+#if SWEET_XBRAID
+		xbraid.outputConfig();
+#endif
+
 	}
 
 
@@ -1288,6 +1247,7 @@ public:
 
 		timecontrol.current_timestep_nr = 0;
 		timecontrol.current_simulation_time = 0;
+		//////timecontrol.current_simulation_time = 414720;
 		timecontrol.current_timestep_size = timecontrol.setup_timestep_size;
 
 		if ((disc.space_res_physical[0] != -1) && (disc.space_res_physical[1] != -1))
@@ -1394,7 +1354,7 @@ public:
 			return 3;
 		}
 
-		SWEETError("More than 2 values given");
+		SWEETError("More than 3 values given");
 		return -1;
 	}
 
@@ -1428,6 +1388,11 @@ public:
 #if SWEET_LIBPFASST
 		libpfasst.printOptions();
 #endif
+
+#if SWEET_XBRAID
+		xbraid.printOptions();
+#endif
+
 
 		std::cout << std::endl;
 	}
@@ -1494,6 +1459,16 @@ public:
 				       max_options
 				       );
 #endif
+
+#if SWEET_XBRAID
+        int xbraid_start_option_index = next_free_program_option;
+        xbraid.setup_longOptionList(
+				       long_options,
+				       next_free_program_option,	///< also updated (IO)
+				       max_options
+				       );
+#endif
+
 
         int rexi_start_option_index = next_free_program_option;
         rexi.setup_longOptionList(
@@ -1637,6 +1612,16 @@ public:
 						c += retval;
 					}
 #endif
+
+#if SWEET_XBRAID
+					{
+						int retval = xbraid.setup_longOptionValue(i-xbraid_start_option_index, optarg);
+						if (retval == -1)
+							continue;
+						c += retval;
+					}
+#endif
+
 
 					{
 						int retval = rexi.setup_longOptionValue(i-rexi_start_option_index, optarg);
@@ -1868,6 +1853,10 @@ public:
 						iodata.output_file_name = "output_%s_t%020.8f.txt";
 					else
 						SWEETError("Unknown filemode '"+iodata.output_file_mode+"'");
+#if !SWEET_XBRAID					
+					iodata.output_file_name = "output_%s_t%020.8f.csv";
+					iodata.output_file_name_bin = "output_%s_t%020.8f.sweet";
+#endif
 				}
 			}
 		}
