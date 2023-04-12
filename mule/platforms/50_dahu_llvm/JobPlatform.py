@@ -155,7 +155,9 @@ def jobscript_get_exec_command(jg : JobGeneration):
     # We shouldn't use mpiexec for validation scripts
     #
     if not p.mpiexec_disabled:
-    	mpiexec = "mpiexec -n "+str(p.num_ranks) + " -bind-to none -map-by slot:pe=1 --report-bindings"  ###+" --perhost "+str(p.num_ranks_per_node)
+        mpiexec = "mpiexec -n "+str(p.num_ranks) + " --map-by numa:pe=" + str(p.num_threads_per_rank) + " --report-bindings"  ###+" --perhost "+str(p.num_ranks_per_node)
+        ###mpiexec = "mpiexec -n "+str(p.num_ranks) + " -bind-to none -map-by slot:pe=1 --report-bindings"  ###+" --perhost "+str(p.num_ranks_per_node)
+
 
 
     sweet_ld_library_path = os.getenv('MULE_LD_LIBRARY_PATH')
