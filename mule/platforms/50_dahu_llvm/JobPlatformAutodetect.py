@@ -11,8 +11,8 @@ def autodetect():
     	True if current platform matches, otherwise False
     """
 
-    if platform.node()[:8] == 'cm2login':
-    	return True
+    if socket.gethostname() == 'f-dahu':
+        return True
 
     return False
 
