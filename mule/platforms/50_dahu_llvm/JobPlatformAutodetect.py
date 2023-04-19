@@ -1,5 +1,5 @@
 
-import platform
+import socket
 import os
 
 def autodetect():
