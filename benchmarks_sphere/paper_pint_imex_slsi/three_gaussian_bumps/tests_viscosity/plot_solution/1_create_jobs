@@ -1,0 +1,11 @@
+#!/bin/bash
+
+ref_dir="../../tests_params_MGRIT/tests_convergence/fine_sim"
+
+## create ref job
+if [ ! -d "$ref_dir" ]; then
+	ln -sf $ref_dir fine_sim
+fi
+
+cd ../
+../benchmarks_create.py xbraid 0 1
