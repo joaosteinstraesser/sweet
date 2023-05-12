@@ -1,0 +1,13 @@
+#!/bin/bash
+
+ref_dir="fine_sim"
+
+## create ref job
+if [ ! -d "$ref_dir" ]; then
+	mkdir $ref_dir
+fi
+cd $ref_dir
+../../benchmarks_create.py ref 0 0
+
+cd ../
+../benchmarks_create.py xbraid 0 0

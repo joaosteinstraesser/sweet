@@ -1,0 +1,17 @@
+#!/bin/bash
+
+cd numerical_simulations
+./1_run_everything
+cd ../
+
+cd stability_regions
+./1_run_everything
+cd ../
+
+cd Tikz_figures
+./1_run_everything
+cd ../
+
+cd viscosity_coefficients
+./1_run_everything
+cd ../

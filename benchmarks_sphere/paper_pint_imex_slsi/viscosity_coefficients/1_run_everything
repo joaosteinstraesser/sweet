@@ -1,0 +1,3 @@
+#!/bin/bash
+
+python3 compute_hyperviscosity_coefficients.py

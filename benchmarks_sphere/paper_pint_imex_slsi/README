@@ -1,0 +1,17 @@
+## All content used in JCP paper
+
+--> numerical_simulations
+    Reference and PinT simulations of the Gaussian bumps and unstable jet test cases
+
+--> stability_regions
+    Analytical stability study
+
+--> test_mpi_openmp
+    Preliminary tests of hybrid MPI-OpenMP parallelization
+
+--> Tikz_figures
+    Produces figures using Tikz
+
+--> viscosity_coefficients
+    Overview on viscosity theory
+

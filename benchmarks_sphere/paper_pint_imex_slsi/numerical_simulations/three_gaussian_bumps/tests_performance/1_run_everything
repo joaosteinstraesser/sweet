@@ -1,0 +1,15 @@
+#!/bin/bash
+
+cd tests_IMEX
+./1_create_jobs
+./2_submit_ref_job
+./3_submit_xbraid_jobs
+./4_postprocessing
+cd ../
+
+cd tests_SL_SI_SETTLS
+./1_create_jobs
+./2_submit_ref_job
+./3_submit_xbraid_jobs
+./4_postprocessing
+cd ../
