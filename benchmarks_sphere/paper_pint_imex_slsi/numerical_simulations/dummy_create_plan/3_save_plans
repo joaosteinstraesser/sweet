@@ -1,0 +1,4 @@
+#!/bin/bash
+
+cp shtns* ../fftw_shtns_plan/.
+cp sweet_fftw ../fftw_shtns_plan/.

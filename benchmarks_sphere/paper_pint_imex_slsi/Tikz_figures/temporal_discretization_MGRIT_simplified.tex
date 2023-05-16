@@ -1,0 +1,54 @@
+\begin{tikzpicture}
+      \coordinate (A) at (0,0) {};
+      \coordinate (Ab) at (-.5,0) {};
+      \coordinate (B) at (6,0) {};
+      \coordinate (C) at (12,0) {};
+      \coordinate (Cb) at (12.5,0) {};
+      \draw[ultra thick] (A) -- (C);
+      \draw[ultra thick, dashed] (A)  -- (Ab);
+      \draw[ultra thick, dashed] (C)  -- (Cb);
+       
+      \node at ($(A)+(0,4ex)$) {$T_{i-1}$};
+      \node at ($(B)+(0,4ex)$) {$T_{i}$};
+      \node at ($(C)+(0,4ex)$) {$T_{i+1}$};
+      \node at ($(B)+(-1.5,3ex)$) {$t_{m_c i -1}$};
+      \node at ($(B)+(1.5,3ex)$) {$t_{m_c i +1}$};
+      \node at ($(B)+(3,3ex)$) {$t_{m_c i +2}$};
+      
+      \xdef\xz{0}
+      \xdef\y{0}
+      
+      \foreach \x in {0,6,12,...,42}
+      {
+          \node (B\x) at ($(\xz,\y)+(\x*0.25cm,0)$) {\Large$\color{myblue}\bullet$};
+      }
+      
+      \foreach \x in {1,2,...,5}
+      {
+          \node (B\x) at ($(\xz,\y)+(\x*1.5cm,-.1cm)$) {};
+      }
+      
+      
+      \foreach \x in {0,12,24}
+      {        
+          \node (B\x) at ($(\xz,\y)+(\x*0.5cm,0)$) {\Large$\color{orange}\blacksquare$};
+      }
+      
+          %% brace for DT
+        \draw[decoration={brace,raise=30pt},decorate,color=orange]
+                 (0.,0.) -- node[above=30pt] {$\Dt_{l+1}$} (6.,0.);
+          
+          %% brace for Dt
+        \draw[decoration={brace,raise=10pt},decorate,color=myblue]
+                 (1.5,0.) -- node[above=10pt] {$\Dt_{l}$} (3.,0.);
+
+
+        %% F-relaxation
+        \draw[->,>=stealth,out=-70,in=-110,looseness=0.75, myblue, ultra thick] (B0) to  node[below]{\Large$\begingroup\color{myblue}\phi_l\endgroup$} (B1);
+        \draw[->,>=stealth,out=-70,in=-110,looseness=0.75, myblue, ultra thick] (B6) to  node[below]{\Large$\begingroup\color{myblue}\phi_l\endgroup$} (B2);
+        \draw[->,>=stealth,out=-70,in=-110,looseness=0.75, myblue, ultra thick] (B2) to  node[below]{\Large$\begingroup\color{myblue}\phi_l\endgroup$} (B3);
+
+        %% C-relaxation
+        \draw[->,>=stealth,out=-70,in=-110,looseness=0.75, orange,dashed, ultra thick] (B3) to  node[below]{\Large$\begingroup\color{orange}\phi_l\endgroup$} (B4);
+
+\end{tikzpicture}

@@ -1,0 +1,4 @@
+#!/bin/bash
+
+pdflatex -synctex=1 -interaction=nonstopmode -shell-escape -output-directory=build main.tex
+mv *pdf final_figures/.

@@ -86,6 +86,7 @@ jg = RuntimeSWEPlaneEarthParam(jg)
 
 jg.runtime.viscosity = 0
 
+jg.runtime.reuse_plans = 'require_load'
 
 ###max_simulation_time = 102400.;
 max_simulation_time = 60 * 60 * 36;

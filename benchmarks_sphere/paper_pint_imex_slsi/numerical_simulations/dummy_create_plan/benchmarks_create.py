@@ -86,7 +86,6 @@ jg = RuntimeSWEPlaneEarthParam(jg)
 
 jg.runtime.viscosity = 0
 
-jg.runtime.reuse_plans = 'require_load'
 
 ###max_simulation_time = 102400.;
 max_simulation_time = 60 * 60 * 36;
@@ -125,7 +124,7 @@ jg.runtime.xbraid_tol = 0.
 jg.runtime.xbraid_tnorm = 2
 jg.runtime.xbraid_cfactor = 2
 jg.runtime.xbraid_cfactor0 = -1
-jg.runtime.xbraid_max_iter = 11
+jg.runtime.xbraid_max_iter = 10
 jg.runtime.xbraid_fmg = 0
 jg.runtime.xbraid_res = 0
 jg.runtime.xbraid_storage = 0
@@ -143,7 +142,7 @@ jg.runtime.xbraid_timestepping_order = 2
 jg.runtime.xbraid_timestepping_order2 = 2
 jg.runtime.xbraid_verbosity = 0;
 jg.runtime.xbraid_viscosity_order = 2;
-jg.runtime.xbraid_viscosity_coefficient = str(jg.runtime.viscosity) + ",1e6";
+jg.runtime.xbraid_viscosity_coefficient = jg.runtime.viscosity;
 
 if sim_type == "xbraid":
     jg.runtime.xbraid_load_ref_csv_files = 1;
@@ -151,118 +150,58 @@ if sim_type == "xbraid":
     jg.runtime.xbraid_path_ref_csv_files = ref_job;
     jg.runtime.xbraid_load_fine_csv_files = 1;
     jg.runtime.xbraid_path_fine_csv_files = ref_job;
-    jg.runtime.xbraid_store_iterations = 1;
+    jg.runtime.xbraid_store_iterations = 0;
     #######jg.runtime.xbraid_spectral_ref = 1024;
 
 dts = [timestep_size_reference]; ## time step of the fine level
 #####cfactors = [2, 4, 8]; ## coarsening factor between levels
 #####nbs_levels = [2, 3, 4] ## number of levels
-cfactors = [2,4]; ## coarsening factor between levels
-nbs_levels = [2,3] ## number of levels
+cfactors = [2]; ## coarsening factor between levels
+nbs_levels = [2] ## number of levels
 skips = [1] ## skip or not first down cycle
-nb_pts = [1]; ## number of parallel processors in time
+nb_pts = [16]; ## number of parallel processors in time
 fmgs = [1];
 fmg_vcycs = [1];
 ####nrelaxs = [0, 1, 2, 3];
 ####spatial_coarsening = [51, 128, 0];
-nrelaxs = [0,1,2,5];
-spatial_coarsening = [51,128];
-tsms = ["l_irk_n_erk", "l_irk_na_sl_nr_settls_uv_only" ]
-
-if sim_type == "xbraid":
-
-    for dt in dts:
-
-        for cfactor in cfactors:
-
-            for nb_levels in nbs_levels:
-
-                for skip in skips:
-
-                    for nb_pt in nb_pts:
-
-                        for coarsening in spatial_coarsening:
-
-                            for fmg in fmgs:
-
-                                for fmg_vcyc in fmg_vcycs:
-
-                                    for nrelax in nrelaxs:
-
-                                        for tsm in tsms:
-
-                                            if nb_levels == 4 and cfactor == 8:
-                                                continue;
-
-                                            ####if plot_solution:
-                                            ####    jg.runtime.xbraid_store_iterations = 1;
-                                            ####    if [nb_levels, cfactor, nrelax, coarsening] not in [[2,4,2,51],[2,2,2,128]]:
-                                            ####        continue
-
-                                            jg.runtime.xbraid_timestepping_method = "l_irk_n_erk," + tsm;
-                                            jg.runtime.xbraid_cfactor = cfactor;
-                                            jg.runtime.xbraid_max_levels = nb_levels;
-                                            jg.runtime.xbraid_skip = skip;
-                                            jg.runtime.timestep_size = dt;
-                                            jg.runtime.xbraid_pt = nb_pt;
-                                            jg.runtime.xbraid_spatial_coarsening = coarsening;
-                                            jg.runtime.xbraid_fmg = fmg;
-                                            jg.runtime.xbraid_fmg_vcyc = fmg_vcyc;
-                                            jg.runtime.xbraid_nrelax = nrelax;
-
-                                            params_pspace_num_cores_per_rank = [jg.platform_resources.num_cores_per_socket]
-                                            #params_pspace_num_threads_per_rank = [i for i in range(1, jg.platform_resources.num_cores_per_socket+1)]
-                                            params_pspace_num_threads_per_rank = [jg.platform_resources.num_cores_per_socket]
-                                            params_ptime_num_cores_per_rank = [1]
-
-                                            # Update TIME parallelization
-                                            ptime = JobParallelizationDimOptions('time')
-                                            ptime.num_cores_per_rank = 1
-                                            ptime.num_threads_per_rank = 1 #pspace.num_cores_per_rank
-                                            ptime.num_ranks = nb_pt
-
-                                            pspace = JobParallelizationDimOptions('space')
-                                            pspace.num_cores_per_rank = 16
-                                            ###pspace.num_threads_per_rank = params_pspace_num_cores_per_rank[-1]
-                                            pspace.num_threads_per_rank = 16
-                                            pspace.num_ranks = 1
-
-                                            # Setup parallelization
-                                            jg.setup_parallelization([pspace, ptime])
+nrelaxs = [0];
+spatial_coarsening = [51];
+tsms = ["l_irk_n_erk"]
 
 
-                                            jg.gen_jobscript_directory()
-
-elif sim_type == "ref":
 ####### fine simulation
-    jg.compile.parareal = "none";
-    jg.compile.xbraid = "none";
-    jg.runtime.parareal_enabled = 0;
-    jg.runtime.xbraid_enabled = 0;
+jg.compile.parareal = "none";
+jg.compile.xbraid = "none";
+jg.runtime.parareal_enabled = 0;
+jg.runtime.xbraid_enabled = 0;
 
+params_pspace_num_cores_per_rank = [jg.platform_resources.num_cores_per_socket]
+#params_pspace_num_threads_per_rank = [i for i in range(1, jg.platform_resources.num_cores_per_socket+1)]
+params_pspace_num_threads_per_rank = [jg.platform_resources.num_cores_per_socket]
+params_ptime_num_cores_per_rank = [1]
 
-    params_pspace_num_cores_per_rank = [jg.platform_resources.num_cores_per_socket]
-    #params_pspace_num_threads_per_rank = [i for i in range(1, jg.platform_resources.num_cores_per_socket+1)]
-    params_pspace_num_threads_per_rank = [jg.platform_resources.num_cores_per_socket]
-    params_ptime_num_cores_per_rank = [1]
+# Update TIME parallelization
+ptime = JobParallelizationDimOptions('time')
+ptime.num_cores_per_rank = 1
+ptime.num_threads_per_rank = 1 #pspace.num_cores_per_rank
+ptime.num_ranks = 1
 
-    # Update TIME parallelization
-    ptime = JobParallelizationDimOptions('time')
-    ptime.num_cores_per_rank = 1
-    ptime.num_threads_per_rank = 1 #pspace.num_cores_per_rank
-    ptime.num_ranks = 1
+pspace = JobParallelizationDimOptions('space')
+pspace.num_cores_per_rank = 1
+###pspace.num_threads_per_rank = params_pspace_num_cores_per_rank[-1]
+pspace.num_threads_per_rank = 1
+pspace.num_ranks = 1
 
-    pspace = JobParallelizationDimOptions('space')
-    pspace.num_cores_per_rank = 16
-    ###pspace.num_threads_per_rank = params_pspace_num_cores_per_rank[-1]
-    pspace.num_threads_per_rank = 16
-    pspace.num_ranks = 1
+# Setup parallelization
+jg.setup_parallelization([pspace, ptime])
 
-    # Setup parallelization
-    jg.setup_parallelization([pspace, ptime])
+jg.parallelization.mpiexec_disabled = False
+####jg.parallelization.mpiexec_disabled = True
 
-    jg.parallelization.mpiexec_disabled = False
-    ####jg.parallelization.mpiexec_disabled = True
+jg.runtime.reuse_plans = 'save'
 
+for dt in [60]:
+    jg.runtime.timestep_size = dt
 
     jg.gen_jobscript_directory();
+

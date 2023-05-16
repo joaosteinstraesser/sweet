@@ -1,0 +1,128 @@
+\documentclass[10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{tikz}
+\usetikzlibrary{calc}
+\usetikzlibrary{arrows.meta}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{mathSymbols}
+\usepackage{geometry}
+\usepackage{fontawesome5}
+
+\usetikzlibrary{shapes,arrows,positioning,matrix,chains,fit}
+\usetikzlibrary{backgrounds}
+\usetikzlibrary{decorations.pathreplacing,angles,quotes}
+\usetikzlibrary{calc}
+\usetikzlibrary{patterns}
+
+\usetikzlibrary{intersections}
+
+\usepackage[outline]{contour}
+
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.10}
+\usepgfplotslibrary{fillbetween}
+
+
+%\usepackage{pgfplots}
+
+\usetikzlibrary{external}
+%\tikzsetexternalprefix{build/}
+\tikzexternalize[prefix=TikZfigures-]
+
+%%\pgfplotsset{compat=newest}
+%%\usepgfplotslibrary{external} 
+%%\tikzset{external/up to date check={md5}}
+%%\tikzset{external/mode=convert with system call} 
+%%\tikzexternalize 
+
+
+\newcommand{\savefig}[1]{
+    \tikzsetnextfilename{#1}
+    \input{#1}
+}
+
+%%\newcommand*\setmyname{%
+%%  \expandafter\tikzsetfigurename\expandafter{\currfilebase-}%
+%%}
+%%\AtBeginEnvironment{tikzpicture}{\setmyname}
+
+%%\title{Figures - Thesis}
+%%\author{joao-guilherme.caldas-steinstraesser }
+%%\date{September 2020}
+
+% defining colors
+\definecolor{myred}{RGB}{228,26,28}
+\definecolor{myblue}{RGB}{55,124,184}
+\definecolor{mygreen}{RGB}{50,205,50}
+
+\definecolor{beamer@tbwhite}{rgb}{1,1,1}
+\definecolor{beamer@tbblack}{rgb}{0,0,0}
+\definecolor{beamer@tbgray}{rgb}{0.72,0.72,0.72}
+\definecolor{beamer@tbgreen}{rgb}{0.66,0.76,0.23}
+\definecolor{beamer@tbred}{rgb}{.8,0.2,0.1}
+\definecolor{beamer@tbbrown}{rgb}{0.43,0.31,0.28}
+\definecolor{beamer@tbblue}{rgb}{0.04,0.66,0.71}
+\definecolor{beamer@tbgray}{rgb}{0.7,0.7,0.7}
+\definecolor{beamer@tbdarkred}{rgb}{.5,0.2,0.2}
+
+
+%%\geometry{
+%% a4paper,
+%% left=20mm,
+%% top=20mm,
+%% bottom = 20mm,
+%% }
+
+\begin{document}
+
+\savefig{temporal_discretization_MGRIT_simplified}
+\savefig{recurrence_parareal}
+\savefig{recurrence_mgrit_nrelax1}
+
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

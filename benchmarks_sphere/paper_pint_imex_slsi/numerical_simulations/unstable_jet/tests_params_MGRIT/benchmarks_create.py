@@ -86,6 +86,7 @@ jg = RuntimeSWEPlaneEarthParam(jg)
 
 jg.runtime.viscosity = 0
 
+jg.runtime.reuse_plans = 'require_load'
 
 ###max_simulation_time = 102400.;
 ###max_simulation_time = 60 * 60 * 24 * 6.;
@@ -191,49 +192,46 @@ if sim_type == "xbraid":
 
                                         for tsm in tsms:
 
-                                            ####if plot_solution:
-                                            ####    jg.runtime.xbraid_store_iterations = 1;
-                                            ####    if [nb_levels, cfactor, nrelax, coarsening] not in [[2,4,2,51],[2,2,2,128]]:
-                                            ####        continue
+                                            for visc_strategy in range(2):
+
+                                                ####if plot_solution:
+                                                ####    jg.runtime.xbraid_store_iterations = 1;
+                                                ####    if [nb_levels, cfactor, nrelax, coarsening] not in [[2,4,2,51],[2,2,2,128]]:
+                                                ####        continue
 
 
-                                            if tsm == "l_irk_n_erk":
-                                                ###jg.runtime.xbraid_viscosity_order = "2,6";
-                                                jg.runtime.xbraid_viscosity_order = "2,4";
-                                                if nb_levels == 2:
-                                                    if spatial_coarsening == 51:
-                                                        if cfactor == 2:
-                                                            ##jg.runtime.xbraid_viscosity_coefficient = str(jg.runtime.viscosity) + ",1e25";
-                                                            jg.runtime.xbraid_viscosity_coefficient = str(jg.runtime.viscosity) + ",1e15";
-                                                        elif cfactor == 4:
-                                                            ##jg.runtime.xbraid_viscosity_coefficient = str(jg.runtime.viscosity) + ",1e26";
-                                                            jg.runtime.xbraid_viscosity_coefficient = str(jg.runtime.viscosity) + ",1e16";
-                                                    else:
-                                                        if cfactor == 2:
-                                                            ##jg.runtime.xbraid_viscosity_coefficient = str(jg.runtime.viscosity) + ",1e26";
-                                                            jg.runtime.xbraid_viscosity_coefficient = str(jg.runtime.viscosity) + ",1e16";
-                                                        elif cfactor == 4:
-                                                            ##jg.runtime.xbraid_viscosity_coefficient = str(jg.runtime.viscosity) + ",1e27";
-                                                            jg.runtime.xbraid_viscosity_coefficient = str(jg.runtime.viscosity) + ",1e17";
-                                                else:
-                                                    if spatial_coarsening == 51:
-                                                        if cfactor == 2:
-                                                            ##jg.runtime.xbraid_viscosity_coefficient = str(jg.runtime.viscosity) + ",1e25,1e26";
-                                                            jg.runtime.xbraid_viscosity_coefficient = str(jg.runtime.viscosity) + ",1e15,1e16";
-                                                        elif cfactor == 4:
-                                                            ##jg.runtime.xbraid_viscosity_coefficient = str(jg.runtime.viscosity) + ",1e26,1e27";
-                                                            jg.runtime.xbraid_viscosity_coefficient = str(jg.runtime.viscosity) + ",1e16,1e17";
-                                                    else:
-                                                        if cfactor == 2:
-                                                            ##jg.runtime.xbraid_viscosity_coefficient = str(jg.runtime.viscosity) + ",1e26,1e27";
-                                                            jg.runtime.xbraid_viscosity_coefficient = str(jg.runtime.viscosity) + ",1e16,1e17";
-                                                        elif cfactor == 4:
-                                                            ##jg.runtime.xbraid_viscosity_coefficient = str(jg.runtime.viscosity) + ",1e27,1e27";
-                                                            jg.runtime.xbraid_viscosity_coefficient = str(jg.runtime.viscosity) + ",1e17,1e17";
+                                            if visc_strategy == 0:
+                                                jg.runtime.xbraid_viscosity_order = "2";
+                                                jg.runtime.xbraid_viscosity_coefficient = str(jg.runtime.viscosity) + ",1e6";
 
                                             else:
-                                                jg.runtime.xbraid_viscosity_order = 2;
-                                                jg.runtime.xbraid_viscosity_coefficient = str(jg.runtime.viscosity) + ",1e7";
+                                                if tsm == "l_irk_n_erk":
+                                                    jg.runtime.xbraid_viscosity_order = "2,4";
+                                                    if nb_levels == 2:
+                                                        if spatial_coarsening == 51:
+                                                            if cfactor == 2:
+                                                                jg.runtime.xbraid_viscosity_coefficient = str(jg.runtime.viscosity) + ",1e16";
+                                                            elif cfactor == 4:
+                                                                jg.runtime.xbraid_viscosity_coefficient = str(jg.runtime.viscosity) + ",1e17";
+                                                        else:
+                                                            if cfactor == 2:
+                                                                jg.runtime.xbraid_viscosity_coefficient = str(jg.runtime.viscosity) + ",1e16";
+                                                            elif cfactor == 4:
+                                                                jg.runtime.xbraid_viscosity_coefficient = str(jg.runtime.viscosity) + ",1e17";
+                                                    else:
+                                                        if spatial_coarsening == 51:
+                                                            if cfactor == 2:
+                                                                jg.runtime.xbraid_viscosity_coefficient = str(jg.runtime.viscosity) + ",1e16,1e17";
+                                                            elif cfactor == 4:
+                                                                jg.runtime.xbraid_viscosity_coefficient = str(jg.runtime.viscosity) + ",1e17,1e17";
+                                                        else:
+                                                            if cfactor == 2:
+                                                                jg.runtime.xbraid_viscosity_coefficient = str(jg.runtime.viscosity) + ",1e16,1e17";
+                                                            elif cfactor == 4:
+                                                                jg.runtime.xbraid_viscosity_coefficient = str(jg.runtime.viscosity) + ",1e17,1e17";
+                                                else:
+                                                    jg.runtime.xbraid_viscosity_order = 2;
+                                                    jg.runtime.xbraid_viscosity_coefficient = str(jg.runtime.viscosity) + ",1e7";
 
                                             jg.runtime.xbraid_timestepping_method = "l_irk_n_erk," + tsm;
                                             jg.runtime.xbraid_cfactor = cfactor;

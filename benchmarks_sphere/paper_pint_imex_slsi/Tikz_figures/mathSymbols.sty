@@ -1,0 +1,237 @@
+\ProvidesPackage{mathSymbols}[2018/12/12 mathSymbols Package]
+
+\RequirePackage{amsmath,amsfonts,amssymb, bbm}
+
+%% Vector 
+\newcommand{\bs}[1]{\boldsymbol{#1}}
+\newcommand{\vectwo}[2]{ \left(
+	\begin{array}{c}
+		#1 \\ #2
+	\end{array} \right)
+}
+\newcommand{\vecthree}[3]{ \left(
+	\begin{array}{c}
+		#1 \\ #2 \\ #3
+	\end{array} \right)
+}
+\newcommand{\vectwoT}[2]{\left( #1,  \  #2 \right)^T}
+\newcommand{\vecthreeT}[3]{\left( #1, \  #2, \  #3 \right)^T}
+
+%% Matrix
+\newcommand{\matthree}[9]{ \left(
+	\begin{array}{c c c}
+		#1 & #2 & #3\\#4 & #5 & #6\\#7 & #8 & #9
+	\end{array} \right)
+}
+
+%% Operators (mathcal)
+\newcommand{\mc}[1]{\mathcal{#1}}
+\newcommand{\ul}[1]{\underline{#1}}
+\newcommand{\ol}[1]{\overline{#1}}
+
+%% propagators
+\newcommand{\mcF}{\mc{F}_{\dt}}
+\newcommand{\mcG}{\mc{G}_{\Dt}}
+\newcommand{\mcK}{\mc{K}_{\Dt}}
+\newcommand{\mchK}{\wh{\mc{K}}_{\Dt}}
+\newcommand{\mcFk}[1]{\wh{\mc{F}}^{#1}_{\dt_{#1}}}
+\newcommand{\mcFF}[1]{\mc{F}^{#1}_{\dt_#1}}
+
+
+%% Derivatives
+\newcommand{\dert}[1]{\frac{d #1}{d t}}
+\newcommand{\derx}[1]{\frac{d #1}{d x}}
+\newcommand{\dery}[1]{\frac{d #1}{d y}}
+\newcommand{\derz}[1]{\frac{d #1}{d z}}
+\newcommand{\dertt}[1]{\frac{d}{d t}#1}
+\newcommand{\derxx}[1]{\frac{d}{d x}#1}
+\newcommand{\deryy}[1]{\frac{d}{d y}#1}
+\newcommand{\derzz}[1]{\frac{d}{d z}#1}
+\newcommand{\pdert}[1]{\frac{\partial #1}{\partial t}}
+\newcommand{\pderx}[1]{\frac{\partial #1}{\partial x}}
+\newcommand{\pdery}[1]{\frac{\partial #1}{\partial y}}
+\newcommand{\pderz}[1]{\frac{\partial #1}{\partial z}}
+\newcommand{\pdertt}[1]{\frac{\partial}{\partial t}#1}
+\newcommand{\pderxx}[1]{\frac{\partial}{\partial x}#1}
+\newcommand{\pderyy}[1]{\frac{\partial}{\partial y}#1}
+\newcommand{\pderzz}[1]{\frac{\partial}{\partial z}#1}
+
+%% Norm
+\newcommand{\norm}[2]{\left\lVert {#2} \right \rVert_{#1}}
+\newcommand{\normG}[1]{\left\lVert {#1} \right \rVert}
+
+%% Numerical sets
+\newcommand{\naturals}{\mathbb{N}}
+\newcommand{\integers}{\mathbb{Z}}
+\newcommand{\reals}{\mathbb{R}}
+\newcommand{\complex}{\mathbb{C}}
+
+%% Discretization
+\newcommand{\Dt}{\Delta t}
+\newcommand{\Dx}{\Delta x}
+\newcommand{\Dy}{\Delta y}
+\newcommand{\Dz}{\Delta z}
+
+\newcommand{\dt}{\delta t}
+\newcommand{\dx}{\delta x}
+\newcommand{\dy}{\delta y}
+\newcommand{\dz}{\delta z}
+
+\newcommand{\DT}{\Delta T}
+
+%% Vector notation
+\newcommand{\vecA}{\boldsymbol{A}}
+\newcommand{\vecB}{\boldsymbol{B}}
+\newcommand{\vecC}{\boldsymbol{C}}
+\newcommand{\vecD}{\boldsymbol{D}}
+\newcommand{\vecE}{\boldsymbol{E}}
+\newcommand{\vecF}{\boldsymbol{F}}
+\newcommand{\vecG}{\boldsymbol{G}}
+\newcommand{\vecH}{\boldsymbol{H}}
+\newcommand{\vecI}{\boldsymbol{I}}
+\newcommand{\vecJ}{\boldsymbol{J}}
+\newcommand{\vecK}{\boldsymbol{K}}
+\newcommand{\vecL}{\boldsymbol{L}}
+\newcommand{\vecM}{\boldsymbol{M}}
+\newcommand{\vecN}{\boldsymbol{N}}
+\newcommand{\vecO}{\boldsymbol{O}}
+\newcommand{\vecP}{\boldsymbol{P}}
+\newcommand{\vecQ}{\boldsymbol{Q}}
+\newcommand{\vecR}{\boldsymbol{R}}
+\newcommand{\vecS}{\boldsymbol{S}}
+\newcommand{\vecT}{\boldsymbol{T}}
+\newcommand{\vecU}{\boldsymbol{U}}
+\newcommand{\vecV}{\boldsymbol{V}}
+\newcommand{\vecW}{\boldsymbol{W}}
+\newcommand{\vecX}{\boldsymbol{X}}
+\newcommand{\vecY}{\boldsymbol{Y}}
+\newcommand{\vecZ}{\boldsymbol{Z}}
+
+\newcommand{\veca}{\boldsymbol{a}}
+\newcommand{\vecb}{\boldsymbol{b}}
+\newcommand{\vecc}{\boldsymbol{c}}
+\newcommand{\vecd}{\boldsymbol{d}}
+\newcommand{\vece}{\boldsymbol{e}}
+\newcommand{\vecf}{\boldsymbol{f}}
+\newcommand{\vecg}{\boldsymbol{g}}
+\newcommand{\vech}{\boldsymbol{h}}
+\newcommand{\veci}{\boldsymbol{i}}
+\newcommand{\vecj}{\boldsymbol{j}}
+\newcommand{\veck}{\boldsymbol{k}}
+\newcommand{\vecl}{\boldsymbol{l}}
+\newcommand{\vecm}{\boldsymbol{m}}
+\newcommand{\vecn}{\boldsymbol{n}}
+\newcommand{\veco}{\boldsymbol{o}}
+\newcommand{\vecp}{\boldsymbol{p}}
+\newcommand{\vecq}{\boldsymbol{q}}
+\newcommand{\vecr}{\boldsymbol{r}}
+\newcommand{\vecs}{\boldsymbol{s}}
+\newcommand{\vect}{\boldsymbol{t}}
+\newcommand{\vecu}{\boldsymbol{u}}
+\newcommand{\vecv}{\boldsymbol{v}}
+\newcommand{\vecw}{\boldsymbol{w}}
+\newcommand{\vecx}{\boldsymbol{x}}
+\newcommand{\vecy}{\boldsymbol{y}}
+\newcommand{\vecz}{\boldsymbol{z}}
+
+\newcommand{\veczero}{\boldsymbol{0}}
+\newcommand{\vecphi}{\boldsymbol{\phi}}
+\newcommand{\vecsigma}{\boldsymbol{\sigma}}
+\newcommand{\vecxi}{\boldsymbol{\xi}}
+
+%% tilde etc
+\newcommand{\tvecy}{\widetilde{\vecy}}
+\newcommand{\wt}[1]{\widetilde{#1}}
+\newcommand{\wh}[1]{\widehat{#1}}
+
+%% round notation
+\renewcommand{\mc}[1]{\mathcal{#1}}
+
+%% Text
+\newcommand{\ie}{\emph{i.e.} }
+\newcommand{\eg}{\emph{e.g.} }
+\newcommand{\wrt}{w.r.t. }
+\newcommand{\quotes}[1]{``#1''}
+
+%% epsilon
+\renewcommand{\epsilon}{\varepsilon}
+\newcommand{\epssv}{\epsilon_{\text{sv}}}
+\newcommand{\epslin}{\epsilon_{\text{sv,linear}}}
+\newcommand{\epsnlin}{\epsilon_{\text{sv,nonlinear}}}
+
+%% finer and coarser solutions
+\newcommand{\uh}{u_h}
+\newcommand{\uH}{u_H}
+\newcommand{\uhH}{\tilde{u}_{h/H}}
+
+%% referential solution
+\newcommand{\vecyref}{\vecy_{\text{ref}}}
+\newcommand{\vecyrefn}{\vecy_{\text{ref},n}}
+\newcommand{\vecyreftn}{\vecy_{\text{ref},\tilde{n}}}
+\newcommand{\vecyrefk}{\vecy_{\text{ref},k}}
+
+%% Transmission operators
+\newcommand{\PiU}{\Pi_h^H}
+\newcommand{\PiD}{\Pi_H^h}
+
+%% Notation
+\newcommand{\dvl}[1]{\overline{\overline{#1}}}
+
+%% size of domain
+\newcommand{\szD}[1]{|\Omega_{#1}|}
+
+%% number of points
+\newcommand{\Ns}{N_{\DT}}
+\newcommand{\Nc}{N_{\Dt}}
+\newcommand{\Nf}{N_{\dt}}
+
+%% porosity
+\newcommand{\phiO}{\phi_{\Omega}}
+\newcommand{\phiG}{\phi_{\Gamma}}
+
+%% model names
+\newcommand{\MODEL}{\text{MODEL}}
+\newcommand{\SWE}{\text{SWE}}
+\newcommand{\SP}{\text{SP}}
+\newcommand{\MP}{\text{MP}}
+\newcommand{\IP}{\text{IP}}
+\newcommand{\DIP}{\text{DIP}}
+
+%% DIP
+\newcommand{\UO}{\vecU_{\Omega}}
+\newcommand{\UG}{\vecU_{\Gamma}}
+\newcommand{\uO}{\vecu_{\Omega}}
+\newcommand{\uG}{\vecu_{\Gamma}}
+\newcommand{\hO}{h_{\Omega}}
+\newcommand{\hG}{h_{\Gamma}}
+\newcommand{\uxO}{u_{x, \Omega}}
+\newcommand{\uxG}{u_{x, \Gamma}}
+\newcommand{\uyO}{u_{y, \Omega}}
+\newcommand{\uyG}{u_{y, \Gamma}}
+
+%% alpha snapshots
+\newcommand{\alphasnap}{\alpha_{\text{s}}}
+
+%% Number of PID windows
+\newcommand{\npid}{N_{\text{PID}}}
+
+%% Name of PID configurations
+\newcommand{\configpid}[1]{\text{PID}_{\text{#1}}}
+
+%% Number of adaptive parareal
+\newcommand{\nadap}{N_{\text{ad}}}
+
+%% Name of adaptive configuration
+\newcommand{\configadap}[1]{\text{AD}_{\text{#1}}}
+
+%% number of iterations
+\newcommand{\nitermax}{N_{\text{itermax}}}
+
+%% Number of local parareals
+\newcommand{\nltp}{N_{\text{LTP}}}
+\newcommand{\nlsp}{N_{\text{LSP}}}
+
+
+
+\endinput
+

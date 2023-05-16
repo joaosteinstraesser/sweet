@@ -1,0 +1,6 @@
+#!/bin/bash
+
+./make
+
+## clean
+rm *dpth *log *md5 build/*
