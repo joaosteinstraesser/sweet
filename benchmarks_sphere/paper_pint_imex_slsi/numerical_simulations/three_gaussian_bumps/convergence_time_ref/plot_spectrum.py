@@ -10,7 +10,7 @@ from matplotlib.ticker import (
 from matplotlib.lines import Line2D
 import os
 
-sys.path.append("/home/jcaldass/Development/IME/PostDocIMEUSP/SWEET_scripts/script_paper_JCP")
+##sys.path.append("../../common_postprocessing_scripts");
 import dataSWEET
 import spectrumSWEET
 

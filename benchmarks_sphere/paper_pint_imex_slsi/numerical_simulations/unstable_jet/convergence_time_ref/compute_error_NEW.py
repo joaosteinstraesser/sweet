@@ -2,9 +2,7 @@ import numpy as np
 import matplotlib.pyplot
 import sys
 
-###sys.path.append("/home/jcaldass/Development/IME/PostDocIMEUSP/SWEET_scripts/script_common");
-###import commonFunctions
-sys.path.append("/home/jcaldass/Development/IME/PostDocIMEUSP/SWEET_scripts/script_paper_JCP");
+###sys.path.append("/home/jcaldass/Development/IME/PostDocIMEUSP/SWEET_scripts/script_paper_JCP");
 import dataSWEET
 import errorSWEET
 
